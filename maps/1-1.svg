@@ -1,0 +1,78 @@
+<svg id="Слой_1" data-name="Слой 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 361.31 140.51">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        fill: none;
+      }
+
+      .cls-1, .cls-3 {
+        stroke: #201600;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2 {
+        opacity: 0;
+      }
+
+      .cls-3 {
+        stroke-linecap: square;
+      }
+    </style>
+  </defs>
+  <title>map-3-2-2</title>
+  <g id="obj">
+    <rect class="cls-1" x="345.98" y="14.42" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="345.98" y="19.3" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="345.98" y="24.18" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="345.98" y="29.32" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="345.98" y="34.2" width="10.64" height="4.88"/>
+    <polygon class="cls-1" points="345.98 0.5 335.35 0.5 335.35 14.16 345.98 14.16 356.62 14.16 356.62 0.5 345.98 0.5"/>
+    <rect class="cls-1" x="335.35" y="14.42" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="335.35" y="19.3" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="335.35" y="24.18" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="335.35" y="29.32" width="10.64" height="4.88"/>
+    <rect class="cls-1" x="335.35" y="34.2" width="10.64" height="4.88"/>
+    <polygon class="cls-1" points="345.98 39.08 335.35 39.08 335.35 48.86 345.98 48.86 356.62 48.86 356.62 39.08 345.98 39.08"/>
+    <rect class="cls-2" x="335.35" y="0.5" width="20.82" height="48.36"/>
+  </g>
+  <g id="obj-2" data-name="obj">
+    <polyline class="cls-1" points="256.45 48.86 240.28 48.86 240.28 0.5 335.35 0.5 335.35 48.86 266.86 48.86"/>
+    <rect class="cls-2" x="240.28" y="0.5" width="95.07" height="48.36"/>
+  </g>
+  <g id="obj-3" data-name="obj">
+    <polyline class="cls-1" points="206.13 48.86 146.09 48.86 146.09 0.5 240.28 0.5 240.28 48.86 216.76 48.86"/>
+    <rect class="cls-2" x="146.09" y="0.5" width="94.19" height="48.36"/>
+  </g>
+  <g id="obj-4" data-name="obj">
+    <polyline class="cls-1" points="118.39 48.86 78 48.86 78 0.5 146.09 0.5 146.09 48.86 129.03 48.86"/>
+    <rect class="cls-2" x="78" y="0.5" width="68.09" height="48.36"/>
+  </g>
+  <g id="obj-5" data-name="obj">
+    <polyline class="cls-1" points="51.45 48.86 48.86 48.86 48.86 0.5 78 0.5 78 48.86 62.19 48.86"/>
+    <rect class="cls-2" x="48.86" y="0.5" width="29.13" height="48.36"/>
+  </g>
+  <g id="obj-6" data-name="obj">
+    <polyline class="cls-1" points="48.86 65.09 48.86 75.19 0.5 75.19 0.5 0.5 48.86 0.5 48.86 54.45"/>
+    <rect class="cls-2" x="309.22" y="62.33" width="74.53" height="48.36" transform="translate(-61.83 384.25) rotate(-90)"/>
+  </g>
+  <g id="obj-7" data-name="obj">
+    <polyline class="cls-1" points="48.86 97.5 48.86 107.6 0.5 107.6 0.5 75.19 48.86 75.19 48.86 86.86"/>
+    <rect class="cls-2" x="330.36" y="115.88" width="32.25" height="48.36" transform="translate(-115.38 437.8) rotate(-90)"/>
+  </g>
+  <g id="obj-8" data-name="obj">
+    <polyline class="cls-1" points="48.86 129.91 48.86 140.01 0.5 140.01 0.5 107.6 48.86 107.6 48.86 119.27"/>
+    <rect class="cls-2" x="330.36" y="148.29" width="32.25" height="48.36" transform="translate(-147.79 470.21) rotate(-90)"/>
+  </g>
+  <g id="obj-9" data-name="obj">
+    <polyline class="cls-1" points="67.39 117.62 67.39 102.99 135.48 102.99 135.48 139.93 67.39 139.93 67.39 128.26"/>
+    <rect class="cls-2" x="404.77" y="136.16" width="36.94" height="68.09" transform="translate(271.64 -301.78) rotate(90)"/>
+  </g>
+  <g id="obj-10" data-name="obj">
+    <polyline class="cls-1" points="95.08 78.03 135.48 78.03 135.48 102.99 67.39 102.99 67.39 78.03 84.44 78.03"/>
+    <rect class="cls-2" x="389.19" y="126.78" width="68.09" height="24.96" transform="translate(524.67 229.77) rotate(180)"/>
+  </g>
+  <line class="cls-1" x1="48.86" y1="140.01" x2="67.39" y2="139.93"/>
+  <line class="cls-3" x1="135.48" y1="78.03" x2="360.81" y2="78.03"/>
+  <line class="cls-3" x1="360.81" y1="48.86" x2="360.81" y2="78.03"/>
+  <line class="cls-3" x1="355.45" y1="48.86" x2="360.81" y2="48.86"/>
+</svg>
