@@ -54,7 +54,6 @@ const get = async function (req, res) {
 module.exports.get = get;
 
 const update = async function (req, res, next) {
-    const errors = [];
     try {
         /**
          *
