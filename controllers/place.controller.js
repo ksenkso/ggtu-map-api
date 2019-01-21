@@ -49,7 +49,7 @@ module.exports.create = create;
 
 const get = async function (req, res) {
     let place = req.place;
-    return ReS(res, {place: place.toJSON()});
+    return ReS(res, place.toJSON());
 };
 module.exports.get = get;
 
@@ -89,7 +89,7 @@ const update = async function (req, res, next) {
                 place.props = await newProps.update(props);
             }
         }
-        return ReS(res, {place: req.place.toJSON()});
+        return ReS(res, req.place.toJSON());
     } catch (e) {
         next(e);
     }
@@ -99,8 +99,9 @@ module.exports.update = update;
 const remove = async function (req, res, next) {
     const place = req.place, id = place.id;
     try {
+        await Place.getPropsClass(place.type).destroy({where: {PlaceId: id}});
         await place.destroy();
-        return ReS(res, {id}, 204);
+        return ReS(res, {id}, 200);
     } catch (e) {
         next(e);
     }
@@ -190,33 +191,45 @@ async function getPlacesExpanded(id) {
 }
 
 const getExpanded = async function (req, res, next) {
-    const places = await getPlacesExpanded();
-    if (places.length) {
-        return ReS(res, places, 200);
-    } else {
-        return ReS(res, [], 404);
+    try {
+        const places = await getPlacesExpanded();
+        if (places.length) {
+            return ReS(res, places, 200);
+        } else {
+            return ReS(res, [], 404);
+        }
+    } catch (e) {
+        next(e);
     }
 };
 module.exports.getExpanded = getExpanded;
 
 const getAll = async function(req, res, next) {
-    let places = await Place.findAll({
-        attributes: ['name', 'type', 'container']
-    });
-    if (places) {
-        return ReS(res, places, 200);
-    } else {
-        return ReS(res, [], 404);
+    try {
+        let places = await Place.findAll({
+            attributes: ['name', 'type', 'container']
+        });
+        if (places) {
+            return ReS(res, places, 200);
+        } else {
+            return ReS(res, [], 404);
+        }
+    } catch (e) {
+        next(e);
     }
 };
 module.exports.getAll = getAll;
 
 const getExpandedById = async function(req, res, next) {
-    const place = await getPlacesExpanded(req.params.id);
-    if (place) {
-        return ReS(res, place, 200);
-    } else {
-        return ReS(res, [], 404);
+    try {
+        const place = await getPlacesExpanded(req.params.id);
+        if (place) {
+            return ReS(res, place, 200);
+        } else {
+            return ReS(res, [], 404);
+        }
+    } catch (e) {
+        next(e);
     }
 };
 module.exports.getExpandedById = getExpandedById;
