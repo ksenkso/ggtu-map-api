@@ -10,15 +10,23 @@ const LocationController = require('../controllers/location.controller');
 const PlaceController = require('../controllers/place.controller');
 
 
-const {Building, Location, Place} = require('../models');
+const {Building, Location, Place, User} = require('../models');
 
 // Permissions section
 const checkAccess = require('./../middleware/checkAccess');
-
+const checkUserPermissions = checkAccess({
+    modelClass: User,
+    hasPermission({user}) {
+        return user.role === 'root'
+    },
+    errorMessage: 'Только администратор может добавлять новых пользователей с назаначением роли',
+    modelName: 'userModel',
+    notFoundMessage: 'Пользователь не найден'
+});
 const checkBuildingPermissions = checkAccess({
     modelClass: Building,
-    hasPermission({user, model}) {
-        return user.login === 'root';
+    hasPermission({user}) {
+        return user.role === 'root';
     },
     errorMessage: 'Только администратор может изменять информацию о корпусах',
     modelName: 'building',
@@ -26,8 +34,8 @@ const checkBuildingPermissions = checkAccess({
 });
 const checkLocationPermissions = checkAccess({
     modelClass: Location,
-    hasPermission({user, model}) {
-        return user.login === 'root';
+    hasPermission({user}) {
+        return user.role === 'root';
     },
     errorMessage: 'Только администратор может изменять информацию об этажах',
     modelName: 'location',
@@ -36,8 +44,8 @@ const checkLocationPermissions = checkAccess({
 
 const checkPlacePermissions = checkAccess({
     modelClass: Place,
-    hasPermission({user, model}) {
-        return user.login === 'root';
+    hasPermission({user}) {
+        return user.role === 'root';
     },
     errorMessage: 'Только администратор может изменять информацию о местах',
     modelName: 'place',
@@ -52,29 +60,33 @@ router.get('/', function (req, res) {
 });
 
 router.post('/login', UserController.login);
+router.get('/auth', UserController.checkAuth);
+router.post('/register', UserController.create);
 
-router.post('/users', UserController.create);                                                                                           // C
+router.post('/users', passport.authenticate('jwt', {session: false}), checkUserPermissions, UserController.create);                                                                                           // C
 router.get('/users/me', passport.authenticate('jwt', {session: false}), UserController.get);                                            // R
-router.put('/users', passport.authenticate('jwt', {session: false}), UserController.update);                                            // U
+router.patch('/users', passport.authenticate('jwt', {session: false}), UserController.update);                                            // U
 router.delete('/users', passport.authenticate('jwt', {session: false}), UserController.remove);                                         // D
 router.get('/users/me', passport.authenticate('jwt', {session: false}), UserController.me);                                             // R                                                                                   // C
+router.get('/users/tokenInfo', passport.authenticate('jwt', {session: false}), UserController.tokenInfo);                                             // R                                                                                   // C
 
 
 // Buildings
 router.get('/buildings', BuildingController.getAll);                                                                                           // C
 router.post('/buildings', passport.authenticate('jwt', {session: false}), BuildingController.create);                                                                                           // C
 router.get('/buildings/:id', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.get);                                            // R
-router.get('/buildings/:id/floors', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.getAllForBuilding);                                            // R
-router.put('/buildings/:id', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.update);                                            // U
+router.get('/buildings/:id/locations', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.getAllForBuilding);                                            // R
+router.patch('/buildings/:id', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.update);                                            // U
 router.delete('/buildings/:id', passport.authenticate('jwt', {session: false}), checkBuildingPermissions, BuildingController.remove);
 
 
-// Floors
+// Locations
 router.post('/locations', passport.authenticate('jwt', {session: false}), LocationController.create);                                                                                           // C
+router.get('/locations', passport.authenticate('jwt', {session: false}), LocationController.getAll);                                                                                           // C
 router.get('/locations/:id', passport.authenticate('jwt', {session: false}), checkLocationPermissions, LocationController.get);                                            // R
 router.get('/locations/:id/places', passport.authenticate('jwt', {session: false}), checkLocationPermissions, LocationController.getPlaces);                                            // R
-router.put('/locations/:id', passport.authenticate('jwt', {session: false}), checkLocationPermissions, LocationController.update);                                            // U
-router.put('/locations/:id/upload', passport.authenticate('jwt', {session: false}), checkLocationPermissions, fileUpload(), LocationController.upload);                                            // U
+router.patch('/locations/:id', passport.authenticate('jwt', {session: false}), checkLocationPermissions, LocationController.update);                                            // U
+router.patch('/locations/:id/upload', passport.authenticate('jwt', {session: false}), checkLocationPermissions, fileUpload(), LocationController.upload);                                            // U
 router.delete('/locations/:id', passport.authenticate('jwt', {session: false}), checkLocationPermissions, LocationController.remove);
 
 // Places
@@ -83,7 +95,7 @@ router.get('/places', passport.authenticate('jwt', {session: false}), PlaceContr
 router.get('/places/expanded', passport.authenticate('jwt', {session: false}), PlaceController.getExpanded);                                            // R
 router.get('/places/:id', passport.authenticate('jwt', {session: false}), checkPlacePermissions, PlaceController.get);                                            // R
 router.get('/places/:id/expanded', passport.authenticate('jwt', {session: false}), PlaceController.getExpandedById);                                            // R
-router.put('/places/:id', passport.authenticate('jwt', {session: false}), checkPlacePermissions, PlaceController.update);                                            // U
+router.patch('/places/:id', passport.authenticate('jwt', {session: false}), checkPlacePermissions, PlaceController.update);                                            // U
 router.delete('/places/:id', passport.authenticate('jwt', {session: false}), checkPlacePermissions, PlaceController.remove);
 
 //********* API DOCUMENTATION **********
