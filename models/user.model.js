@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         login: DataTypes.STRING,
         password: DataTypes.STRING,
+        role: DataTypes.STRING
     });
 
     User.beforeSave(async (user) => {
@@ -46,14 +47,15 @@ module.exports = (sequelize, DataTypes) => {
         }
     };
 
-    User.prototype.getJWT = function () {
+    User.prototype.generateJWT = function () {
         let expiration_time = parseInt(CONFIG.jwt_expiration);
-        return jwt.sign({user_id: this.id}, CONFIG.jwt_encryption, {expiresIn: expiration_time});
+        this.token = jwt.sign({user_id: this.id}, CONFIG.jwt_encryption, {expiresIn: expiration_time});
     };
 
     User.prototype.getClean = function () {
         let json = this.toJSON();
         delete json['password'];
+        json.token = this.token;
         return json;
     };
 
