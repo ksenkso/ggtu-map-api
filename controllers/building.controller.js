@@ -1,14 +1,15 @@
-const authService = require('../services/auth.service');
-const {ReS, handleError} = require('../services/util.service');
-const pe = require('parse-error');
-const {Building} = require('../models');
-// const debug = require('debug')('Auth');
+const {ReS} = require('../services/util.service');
+const {Building, Location} = require('../models');
 
 const getAllForBuilding = async function(req, res, next) {
-    const BuildingId = req.params.buildingId;
-    let floors = await Location.findAll({where: {BuildingId}});
-    floors = floors ? floors.map(b => b.toJSON()) : [];
-    return ReS(res, {floors});
+    try {
+        const BuildingId = req.params.id;
+        let locations = await Location.findAll({where: {BuildingId}});
+        locations = locations ? locations.map(b => b.toJSON()) : [];
+        return ReS(res, locations);
+    } catch (e) {
+        next(e);
+    }
 };
 module.exports.getAllForBuilding = getAllForBuilding;
 /**
@@ -40,21 +41,32 @@ const create = async function (req, res, next) {
 module.exports.create = create;
 
 const getAll = async function(req, res, next) {
-    const buildings = await Building.findAll();
-    return ReS(res, {buildings: buildings.map(b => b.toJSON())});
+    try {
+        const buildings = await Building.findAll({
+            include: [
+                {
+                    model: Location,
+                    attributes: ['id', 'name', 'map']
+                }
+            ]
+        });
+        return ReS(res, buildings.map(b => b.toJSON()));
+    } catch (e) {
+        next(e);
+    }
 };
 module.exports.getAll = getAll;
 
 const get = async function (req, res) {
     let building = req.building;
-    return ReS(res, {building: building.toJSON()});
+    return ReS(res, building.toJSON());
 };
 module.exports.get = get;
 
 const update = async function (req, res, next) {
     try {
         await req.building.update(req.body);
-        return ReS(res, {building: req.building.toJSON()});
+        return ReS(res, req.building.toJSON());
     } catch (e) {
         next(e);
     }
@@ -65,7 +77,7 @@ const remove = async function (req, res, next) {
     const building = req.building, id = building.id;
     try {
         await building.destroy();
-        return ReS(res, {id}, 204);
+        return ReS(res, id, 200);
     } catch (e) {
         next(e);
     }
