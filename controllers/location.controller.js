@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
-const {Location, Place} = require('../models');
+const {Location, Place, Building} = require('../models');
 /**
  *
  * @param req
@@ -32,17 +32,39 @@ const create = async function (req, res, next) {
 };
 module.exports.create = create;
 
+const getAll = async function(req, res, next) {
+    try {
+        let locations = await Location.findAll({
+            include: [
+                {
+                    model: Building,
+                    attributes: ['name']
+                }
+            ]
+        });
+        locations = locations ? locations.map(l => l.toJSON()) : [];
+        return ReS(res, locations, 200);
+    } catch (e) {
+        next(e);
+    }
+};
+module.exports.getAll = getAll;
+
 const getPlaces = async function(req, res, next) {
-    const LocationId = req.params.id;
-    let places = await Place.findAll({where: {LocationId}});
-    places = places ? places.map(p => p.toJSON()) : [];
-    return ReS(res, places, 200);
+    try {
+        const LocationId = req.params.id;
+        let places = await Place.findAll({where: {LocationId}});
+        places = places ? places.map(p => p.toJSON()) : [];
+        return ReS(res, places, 200);
+    } catch (e) {
+        next(e);
+    }
 };
 module.exports.getPlaces = getPlaces;
 
 const get = async function (req, res) {
     let location = req.location;
-    return ReS(res, {location: location.toJSON()});
+    return ReS(res, location.toJSON(), 200);
 };
 module.exports.get = get;
 
@@ -60,7 +82,7 @@ const remove = async function (req, res, next) {
     const location = req.location, id = location.id;
     try {
         await location.destroy();
-        return ReS(res, {id}, 204);
+        return ReS(res, {id}, 200);
     } catch (e) {
         next(e);
     }
