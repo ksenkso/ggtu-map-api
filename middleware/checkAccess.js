@@ -31,8 +31,10 @@ module.exports = function (config) {
         const key = req.params[this.config.id];
         const user = req.user;
         try {
+            const config = Object.assign({}, req.queryConfig);
+            config.include = config.include ? config.include : this.config.relations;
 
-            const model = await this.config.modelClass.findById(key, {include: this.config.relations});
+            const model = await this.config.modelClass.findById(key, config);
             if (!model) {
                 const error = new Error(this.config.notFoundMessage);
                 error.status = 404;

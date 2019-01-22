@@ -1,5 +1,5 @@
 const debug = require('debug')('App:Mid:Rel');
-const models = require('../models');
+const models = require('../../models');
 async function enableRelations(req, res, next) {
     if (req.query.with) {
         const relations = req.query.with.split(',');
@@ -24,8 +24,8 @@ async function enableRelations(req, res, next) {
             debug(include);
         });
         req.queryConfig = Object.assign({}, req.queryConfig, {include});
-        next();
     }
+    next();
 }
 
 

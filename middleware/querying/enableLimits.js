@@ -6,7 +6,7 @@
  * @return {Promise<void>}
  */
 async function enableLimits(req, res, next) {
-
+    req.queryConfig = req.queryConfig ? req.queryConfig : {};
     let limit = 20;
     if (req.query.limit) {
         limit = Math.min(+req.query.limit, 100);
