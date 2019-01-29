@@ -172,12 +172,12 @@ async function getPlacesExpanded(id) {
     };
     let places;
     if (id) {
-        places = [await Place.findById(id, config)];
+        places = [await Place.findById(id, config)].filter(v => !!v);
         debug(`Places count: ${places.length}`);
     } else {
         places = await Place.findAll(config);
     }
-    if (places) {
+    if (places && places.length) {
         places = places.map(place => {
             const data = place.toJSON();
             switch (data.type) {
