@@ -69,12 +69,9 @@ app.use(function (err, req, res, next) {
         return err;
     });
 
-    if (req.app.get('env') === 'production') {
-
-    }
     res
         .status(err.status || 500)
-        .json({success: false, errors});
+        .json(errors);
 });
 
 module.exports = app;
