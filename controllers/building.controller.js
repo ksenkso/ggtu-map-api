@@ -20,14 +20,14 @@ module.exports.getAllForBuilding = getAllForBuilding;
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {type, name} = req.body;
+    const {type, name, container} = req.body;
     const errors = [];
     if (!errors.length) {
         try {
             /**
              * @type Building
              */
-            const building = await Building.create({type, name});
+            const building = await Building.create({type, name, container});
             const output = building.toJSON();
             return ReS(res, output, 201);
         } catch (e) {
