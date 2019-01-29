@@ -23,8 +23,10 @@ async function enableRelations(req, res, next) {
             }
             debug(include);
         });
+        // Assign relations config to `req.queryConfig`
         req.queryConfig = Object.assign({}, req.queryConfig, {include});
     }
+    // Call next middleware to pass the request
     next();
 }
 
