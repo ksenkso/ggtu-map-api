@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
                     debug('Path exists');
                     const file = fs.readFileSync(mapPath);
                     const $ = cheerio.load(file);
-                    $('#' + building.container).attr('data-building-id', building.id);
+                    $('#' + building.container).attr('data-id', building.id);
                     const html = $('svg').parent().html();
                     console.log(html);
                     fs.writeFileSync(mapPath, html);
