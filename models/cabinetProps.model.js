@@ -1,5 +1,4 @@
 'use strict';
-const debug = require('debug')('Model:CabinetProps');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -24,6 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     CabinetProps.associate = function (models) {
         CabinetProps.belongsTo(models.Place);
     };
+
+    CabinetProps.propsList = ['hasProjector', 'isComputerClass', 'isBig'];
 
     return CabinetProps;
 };

@@ -1,6 +1,6 @@
 const debug = require('debug')('App:Controller:Place');
 const {ReS} = require('../services/util.service');
-const {Place, PlaceProperties, GymProps, WCProps, CabinetProps} = require('../models');
+const {Place, GymProps, WCProps, CabinetProps} = require('../models');
 /**
  *
  * @param req
@@ -9,7 +9,7 @@ const {Place, PlaceProperties, GymProps, WCProps, CabinetProps} = require('../mo
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {LocationId, number, name, type, container} = req.body;
+    const {LocationId, number, name, type, container, props} = req.body;
     const errors = [];
     if (!LocationId) {
         errors.push(new Error('Место не привязано к локации.'));
@@ -23,19 +23,20 @@ const create = async function (req, res, next) {
              * @type Place
              */
             const place = await Place.create({LocationId, number, name, type, container});
-            const keys = Object.keys(req.body.properties);
-            if (keys.length) {
-                const rows = keys.map(key => {
-
-                    return {
-                        name: key,
-                        value: req.body.properties[key],
-                        type
-                    };
-                });
-                await PlaceProperties.bulkCreate(rows);
-            }
+            debug('created');
             const output = place.toJSON();
+            if (props) {
+                const PropsClass = Place.getPropsClass(place.type);
+                if (PropsClass) {
+                    debug('Props class - ' + PropsClass.name);
+                }
+                props.PlaceId = place.id;
+                debug('Creating props...');
+                const propsModel = await PropsClass.create(props);
+                debug('Props created. Setting output...');
+                output.props = propsModel.toJSON();
+                debug('Done.');
+            }
             return ReS(res, output, 201);
         } catch (e) {
             next(e);
@@ -71,25 +72,40 @@ const update = async function (req, res, next) {
          * Send the updated record to the client.
          */
         const prevType = req.place.type;
-        let {props} = req.body;
+        // Delete `props` property from the `req.body` to avoid error when updating a model
+        let newProps = req.body.props;
         delete req.body.props;
         let place = await req.place.update(req.body);
-        if (prevType && prevType !== req.place.type) {
-            props = props ? Object.assign(props, {PlaceId: req.place.id}) : {PlaceId: req.place.id};
-            await Place.getPropsClass(prevType).destroy({where: {PlaceId: req.place.id}});
-            await Place.getPropsClass(req.place.type).create(props);
-        } else {
-            if (props) {
-                props.PlaceId = req.place.id;
-                const propsClass = Place.getPropsClass(req.place.type);
-                debug('Got props class - ' + (propsClass ? propsClass.name : 'undefined'));
-                const [newProps] = await propsClass
-                    .findOrCreate({where: {PlaceId: req.place.id}});
-                debug('Got record: ' + newProps.toJSON());
-                place.props = await newProps.update(props);
+        let propsEntry;
+        const PropsClass = Place.getPropsClass(req.body.type);
+        propsEntry = await PropsClass.findOne({where: {PlaceId: req.place.id}});
+        // If there are new props, create them or update old ones
+        if (newProps) {
+            newProps.PlaceId = req.place.id;
+            if (propsEntry) {
+                propsEntry = await propsEntry.update(newProps);
+            } else {
+                propsEntry = await PropsClass.create(newProps);
             }
         }
-        return ReS(res, req.place.toJSON());
+        // If place type was changed, delete old props
+        if (prevType && prevType !== req.body.type) {
+            await Place.getPropsClass(prevType).destroy({where: {PlaceId: req.place.id}});
+        }
+        const output = place.toJSON();
+        if (propsEntry) {
+            debug('Props list - ', PropsClass.propsList);
+            output.props = {};
+            PropsClass.propsList.forEach(propName => {
+                output.props[propName] = propsEntry[propName];
+            });
+
+        } else {
+            output.props = {};
+        }
+        debug('Props assigned - ', output.props);
+
+        return ReS(res, output);
     } catch (e) {
         next(e);
     }
@@ -152,8 +168,7 @@ async function getPlacesExpanded(id) {
         }, {
             model: WCProps,
             attributes: ['sex']
-        }],
-        attributes: ['name', 'type', 'container']
+        }]
     };
     let places;
     if (id) {
@@ -182,6 +197,9 @@ async function getPlacesExpanded(id) {
             delete data.WCProps;
             delete data.CabinetProps;
             delete data.GymProps;
+            if (!data.props) {
+                data.props = {};
+            }
             return data;
         });
         return places;
@@ -222,9 +240,9 @@ module.exports.getAll = getAll;
 
 const getExpandedById = async function(req, res, next) {
     try {
-        const place = await getPlacesExpanded(req.params.id);
-        if (place) {
-            return ReS(res, place, 200);
+        const places = await getPlacesExpanded(req.params.id);
+        if (places && places.length) {
+            return ReS(res, places[0], 200);
         } else {
             return ReS(res, [], 404);
         }

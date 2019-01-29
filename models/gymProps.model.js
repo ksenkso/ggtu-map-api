@@ -1,5 +1,4 @@
 'use strict';
-const debug = require('debug')('Model:GymProps');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -16,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     GymProps.associate = function (models) {
         GymProps.belongsTo(models.Place);
     };
+
+    GymProps.propsList = ['hasTrainers'];
 
     return GymProps;
 };

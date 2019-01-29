@@ -1,5 +1,4 @@
 'use strict';
-const debug = require('debug')('Model:WCProps');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -16,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     WCProps.associate = function (models) {
         WCProps.belongsTo(models.Place);
     };
+
+    WCProps.propsList = ['sex'];
 
     return WCProps;
 };
