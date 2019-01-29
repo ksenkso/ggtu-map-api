@@ -1,6 +1,9 @@
 'use strict';
+const cheerio = require('cheerio');
+const fs = require('fs');
 const debug = require('debug')('App:Model:Place');
-// const {PlaceProps, GymProps, WCProps, CabinetProps} = require('./index');
+const path = require('path');
+const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -33,11 +36,39 @@ module.exports = (sequelize, DataTypes) => {
                 case 'gym': {
                     return models.GymProps;
                 }
-                default: return models.PlaceProps;
+                default:
+                    return models.PlaceProps;
             }
         };
     };
 
+    Place.hook('afterSave', async (place, options) => {
+        debug('afterSave');
+        let shouldUpdate = false;
+        for (let i = 0; i < options.fields.length; i++) {
+            if (options.fields[i] === 'id' || options.fields[i] === 'container') {
+                shouldUpdate = true;
+                break;
+            }
+        }
+        if (shouldUpdate) {
+            debug('Id - ' + place.id);
+            const location = await place.getLocation();
+            const mapPath = path.join(MAPS_PATH, location.map);
+            debug('path: ' + mapPath);
+            if (fs.existsSync(mapPath)) {
+                debug('Path exists');
+                const file = fs.readFileSync(mapPath);
+                const $ = cheerio.load(file);
+                $('#' + place.container).attr('data-place-id', place.id);
+                const html = $('svg').parent().html();
+                console.log(html);
+                fs.writeFileSync(mapPath, html);
+            } else {
+                console.log(mapPath);
+            }
+        }
+    });
 
 
     return Place;
