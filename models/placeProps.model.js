@@ -1,5 +1,4 @@
 'use strict';
-const debug = require('debug')('Model:Building');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -13,6 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     PlaceProps.associate = function (models) {
         PlaceProps.belongsTo(models.Place);
     };
+
+    PlaceProps.propsList = ['meta'];
 
 
     return PlaceProps;
