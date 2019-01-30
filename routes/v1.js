@@ -7,6 +7,7 @@ require('./locations')(router);
 require('./bulidings')(router);
 require('./users')(router);
 require('./places')(router);
+require('./transitions')(router);
 
 /* GET home page. */
 router.get('/', function (req, res) {
