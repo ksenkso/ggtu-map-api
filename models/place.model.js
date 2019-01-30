@@ -70,6 +70,22 @@ module.exports = (sequelize, DataTypes) => {
         }
     });
 
-
+    Place.hook('afterDestroy', async (place, options) => {
+        debug('Id - ' + place.id);
+        const location = await place.getLocation();
+        const mapPath = path.join(MAPS_PATH, location.map);
+        debug('path: ' + mapPath);
+        if (fs.existsSync(mapPath)) {
+            debug('Path exists');
+            const file = fs.readFileSync(mapPath);
+            const $ = cheerio.load(file);
+            $('#' + place.container).attr('data-id', null);
+            const html = $('svg').parent().html();
+            console.log(html);
+            fs.writeFileSync(mapPath, html);
+        } else {
+            console.log(mapPath);
+        }
+    });
     return Place;
 };
