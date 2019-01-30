@@ -62,10 +62,10 @@ app.use(function (err, req, res, next) {
     let errors = (err instanceof Array) ? err : [err];
     errors = errors.map(e => {
         const err = pe(e);
-        delete err.line;
+/*        delete err.line;
         delete err.row;
         delete err.filename;
-        delete err.stack;
+        delete err.stack;*/
         return err;
     });
 
