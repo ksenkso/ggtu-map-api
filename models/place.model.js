@@ -1,9 +1,6 @@
 'use strict';
-const cheerio = require('cheerio');
-const fs = require('fs');
 const debug = require('debug')('App:Model:Place');
-const path = require('path');
-const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
+const {updateContainerOnMap} = require('../utils');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -52,40 +49,14 @@ module.exports = (sequelize, DataTypes) => {
             }
         }
         if (shouldUpdate) {
-            debug('Id - ' + place.id);
             const location = await place.getLocation();
-            const mapPath = path.join(MAPS_PATH, location.map);
-            debug('path: ' + mapPath);
-            if (fs.existsSync(mapPath)) {
-                debug('Path exists');
-                const file = fs.readFileSync(mapPath);
-                const $ = cheerio.load(file);
-                $('#' + place.container).attr('data-id', place.id);
-                const html = $('svg').parent().html();
-                console.log(html);
-                fs.writeFileSync(mapPath, html);
-            } else {
-                console.log(mapPath);
-            }
+            updateContainerOnMap(location, place.container, place.id);
         }
     });
 
-    Place.hook('afterDestroy', async (place, options) => {
-        debug('Id - ' + place.id);
+    Place.hook('afterDestroy', async (place) => {
         const location = await place.getLocation();
-        const mapPath = path.join(MAPS_PATH, location.map);
-        debug('path: ' + mapPath);
-        if (fs.existsSync(mapPath)) {
-            debug('Path exists');
-            const file = fs.readFileSync(mapPath);
-            const $ = cheerio.load(file);
-            $('#' + place.container).attr('data-id', null);
-            const html = $('svg').parent().html();
-            console.log(html);
-            fs.writeFileSync(mapPath, html);
-        } else {
-            console.log(mapPath);
-        }
+        updateContainerOnMap(location, place.container);
     });
     return Place;
 };

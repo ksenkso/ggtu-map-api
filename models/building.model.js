@@ -1,9 +1,6 @@
 'use strict';
-const cheerio = require('cheerio');
-const fs = require('fs');
-const path = require('path');
-const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
-const debug = require('debug')('Model:Building');
+const debug = require('debug')('App:Model:Building');
+const {updateContainerOnMap} = require('../utils');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -38,40 +35,14 @@ module.exports = (sequelize, DataTypes) => {
             if (shouldUpdate) {
                 debug('Id - ' + building.id);
                 const location = await models.Location.findOne({where: {BuildingId: null}});
-                const mapPath = path.join(MAPS_PATH, location.map);
-                debug('path: ' + mapPath);
-                if (fs.existsSync(mapPath)) {
-                    debug('Path exists');
-                    const file = fs.readFileSync(mapPath);
-                    const $ = cheerio.load(file);
-                    $('#' + building.container).attr('data-id', building.id);
-                    const html = $('svg').parent().html();
-                    console.log(html);
-                    fs.writeFileSync(mapPath, html);
-                } else {
-                    console.log(mapPath);
-                }
+                updateContainerOnMap(location, building.container, building.id);
             }
         });
-        Building.hook('afterDestroy', async (building, options) => {
+        Building.hook('afterDestroy', async (building) => {
             debug('afterDestroy');
             debug('Id - ' + building.id);
             const location = await models.Location.findOne({where: {BuildingId: null}});
-            const mapPath = path.join(MAPS_PATH, location.map);
-            debug('path: ' + mapPath);
-            if (fs.existsSync(mapPath)) {
-                debug('Path exists');
-                const file = fs.readFileSync(mapPath);
-                const $ = cheerio.load(file);
-                $('#' + building.container).attr('data-id', null);
-                const html = $('svg').parent().html();
-                console.log(html);
-                fs.writeFileSync(mapPath, html);
-            } else {
-                console.log(mapPath);
-            }
-
-
+            updateContainerOnMap(location, building.container);
         })
     };
 
