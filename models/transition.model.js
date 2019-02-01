@@ -12,8 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Transition.associate = function (models) {
         Transition.belongsTo(models.Location);
-        Transition.belongsTo(models.Location, {as: 'in'});
-        Transition.belongsTo(models.Location, {as: 'out'});
+        Transition.hasMany(models.TransitionLinks);
     };
 
     Transition.defineStatic = () => {
