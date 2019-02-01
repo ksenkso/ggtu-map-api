@@ -76,6 +76,22 @@ const get = async function (req, res) {
 };
 module.exports.get = get;
 
+const getRoot = async function(req, res, next) {
+    try {
+        const location = await Location.findOne({where: {BuildingId: null}});
+        if (location) {
+            return ReS(res, location.toJSON());
+        } else {
+            const error = new Error('Корневая локация не найдена');
+            error.status = 404;
+            next(error);
+        }
+    } catch (e) {
+        next(e);
+    }
+};
+module.exports.getRoot = getRoot;
+
 const update = async function (req, res, next) {
     try {
         const location = await req.location.update(req.body);
