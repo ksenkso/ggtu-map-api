@@ -1,6 +1,6 @@
 const debug = require('debug')('App:Controller:Transition');
 const {ReS} = require('../services/util.service');
-const {Transition, TransitionLinks} = require('../models');
+const {Transition, TransitionView} = require('../models');
 /**
  *
  * @param req
@@ -9,29 +9,19 @@ const {Transition, TransitionLinks} = require('../models');
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {LocationId, container, links} = req.body;
+    const {name, BuildingId, type, views = []} = req.body;
     const errors = [];
-    if (!LocationId) {
-        errors.push(new Error('Переход не привязан к локации.'));
+    if (!name) {
+        errors.push(new Error('У перехода должно быть имя.'));
     }
-    if (!container) {
-        errors.push(new Error('Переход не привязан к области карты.'));
+    if (!BuildingId) {
+        errors.push(new Error('Переход не привязан к зданию.'));
     }
     if (!errors.length) {
         try {
-            /**
-             * @type Transition
-             */
-            const transition = await Transition.create({LocationId, container});
-            debug('created');
+            const transition = await Transition.create({name, type, BuildingId, Views: views}, {include: [{association: 'Views'}]});
+            debug('Transition created');
             const output = transition.toJSON();
-            output.links = [];
-            if (links && links.length) {
-                const createdLinks = await TransitionLinks.bulkCreate(links.map(link => ({TransitionId: transition.id, linkedId: link})));
-                if (createdLinks && createdLinks.length) {
-                    output.links = createdLinks.map(l => l.id);
-                }
-            }
             return ReS(res, output, 201);
         } catch (e) {
             next(e);
@@ -47,34 +37,16 @@ const get = async function (req, res) {
     const id = req.params.id;
     const config = req.queryConfig;
     config.where = Object.assign({}, config.where, {id});
-    config.include = config.include ? config.include : [{model: TransitionLinks, attributes: ['linkedId']}];
+    config.include = config.include ? config.include : [{association: 'Views'}];
     const transition = await Transition.findOne(config);
-    const output = transition.toJSON();
-    if (output.TransitionLinks) {
-        output.links = output.TransitionLinks.map(link => link.linkedId);
-        delete output.TransitionLinks;
-    }
-    return ReS(res, output);
+    return ReS(res, transition.toJSON());
 };
 module.exports.get = get;
 
 const update = async function (req, res, next) {
     try {
-        const transition = req.transition;
-        const links = req.body.links;
-        delete req.body.links;
-        const model = await transition.update(req.body);
-        const output = model.toJSON();
-        output.links = [];
-        if (links && links.length) {
-        //     Need to optimize here
-            await TransitionLinks.destroy({where: {TransitionId: transition.id}});
-            const createdLinks = await TransitionLinks.bulkCreate(links.map(link => ({TransitionId: transition.id, linkedId: link})));
-            if (createdLinks) {
-                output.links = createdLinks.map(link => link.linkedId);
-            }
-        }
-        return ReS(res, output);
+        const model = await req.transition.update(req.body);
+        return ReS(res, model.toJSON());
     } catch (e) {
         next(e);
     }
@@ -94,14 +66,8 @@ module.exports.remove = remove;
 
 const getAll = async function(req, res, next) {
     try {
-        const include = [
-            {
-                model: TransitionLinks,
-                attributes: ['linkedId']
-            }
-        ];
         const config = req.queryConfig;
-        config.include = config.include || include;
+        config.include = config.include || [];
         const transitions = await Transition.findAll(config);
         if (transitions) {
             return ReS(res, transitions, 200);
@@ -113,3 +79,17 @@ const getAll = async function(req, res, next) {
     }
 };
 module.exports.getAll = getAll;
+
+
+const addView = async function(req, res, next) {
+    const id = +req.params.id;
+    const {LocationId, container} = req.body;
+    try {
+        const view = await TransitionView.create({TransitionId: id, LocationId, container});
+        return ReS(res, view.toJSON());
+    } catch (e) {
+        return next(e);
+    }
+};
+module.exports.addView = addView;
+

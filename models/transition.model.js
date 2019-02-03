@@ -1,40 +1,37 @@
 'use strict';
+const {updateContainerOnMap} = require("../utils");
+
 const debug = require('debug')('App:Model:Transition');
-const {updateContainerOnMap} = require('../utils');
 module.exports = (sequelize, DataTypes) => {
     /**
      * @class Transition
      * @extends Sequelize.Model
      */
     const Transition = sequelize.define('Transition', {
-        container: DataTypes.STRING(48)
-    });
+        name: DataTypes.STRING(48),
+        type: DataTypes.STRING(20)
+    }, {timestamps: false});
 
     Transition.associate = function (models) {
-        Transition.belongsTo(models.Location);
-        Transition.hasMany(models.TransitionLinks);
+        Transition.belongsTo(models.Building);
+        Transition.hasMany(models.TransitionView, {as: 'Views'});
     };
 
-    Transition.defineStatic = () => {
-        Transition.hook('afterSave', async (transition, options) => {
-            debug('afterSave');
-            let shouldUpdate = false;
-            for (let i = 0; i < options.fields.length; i++) {
-                if (options.fields[i] === 'id' || options.fields[i] === 'container') {
-                    shouldUpdate = true;
-                    break;
-                }
-            }
-            if (shouldUpdate) {
-                const location = await transition.getLocation();
-                updateContainerOnMap(location, transition.container, transition.id);
-            }
-        });
+    Transition.defineStatic = (models) => {
+      Transition.hook('beforeDestroy', async (transition) => {
+          debug('Fetching views...');
+          const views = await transition.getViews({include: [{model: models.Location}]});
+          debug('Views fetched: ' + views.length);
+          views.forEach(view => {
+              debug('Removing view: ' + view.id);
+              const location = view.Location;
+              debug('View\' location: ' + view.Location.name);
+              debug('View\'s container: ' + view.container);
+              updateContainerOnMap(location, view.container);
+              debug('View removed');
+          });
 
-        Transition.hook('afterDestroy', async (transition) => {
-            const location = await transition.getLocation();
-            updateContainerOnMap(location, transition.container);
-        })
+      })
     };
 
     return Transition;
