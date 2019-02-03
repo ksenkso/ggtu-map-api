@@ -8,6 +8,7 @@ require('./bulidings')(router);
 require('./users')(router);
 require('./places')(router);
 require('./transitions')(router);
+require('./transition-views')(router);
 
 /* GET home page. */
 router.get('/', function (req, res) {

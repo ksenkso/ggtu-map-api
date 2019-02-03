@@ -1,6 +1,6 @@
 const TransitionsController = require('../controllers/transitions.controller');
 const {auth, querying} = require('../middleware');
-const {Transition, TransitionLinks} = require('../models');
+const {Transition} = require('../models');
 const AccessFilter = require('../middleware/AccessFilter');
 class TransitionsFilter extends AccessFilter {
     constructor() {
@@ -36,7 +36,7 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
-        access.createFilter({includes: [{model: TransitionLinks, attributes: ['linkedId']}]}),
+        access.createFilter(),
         TransitionsController.get
     );
     router.patch(
@@ -52,4 +52,11 @@ module.exports = (router) => {
         access.createFilter(),
         TransitionsController.remove
     );
+
+    router.post(
+        '/transitions/:id',
+        auth,
+        access.createFilter(),
+        TransitionsController.addView
+    )
 };
