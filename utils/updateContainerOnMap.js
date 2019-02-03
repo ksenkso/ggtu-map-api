@@ -5,7 +5,7 @@ const path = require('path');
 const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
 /**
  *
- * @param {Location} location
+ * @param {{map: string}} location
  * @param {String} containerId
  * @param {Number | null} id If null, id attribute will be deleted
  */
