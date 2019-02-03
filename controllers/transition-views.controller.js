@@ -13,8 +13,7 @@ module.exports.remove = remove;
 
 const update = async function(req, res, next) {
     try {
-        const {TransitionId, container} = req.body;
-        const updated = await req.view.update({TransitionId, container});
+        const updated = await req.view.update(req.body);
         res.json(updated.toJSON())
     } catch (e) {
         return next(e);
@@ -32,3 +31,12 @@ const create = async function(req, res, next) {
     }
 };
 module.exports.create = create;
+
+const get = async function(req, res, next) {
+    try {
+        return res.json(req.view.toJSON());
+    } catch (e) {
+        return next(e);
+    }
+};
+module.exports.get = get;
