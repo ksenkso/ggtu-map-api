@@ -4,7 +4,7 @@ const path = require('path');
 
 // Register routes
 require('./locations')(router);
-require('./bulidings')(router);
+require('./buildings')(router);
 require('./users')(router);
 require('./places')(router);
 require('./transitions')(router);

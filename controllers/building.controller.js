@@ -1,5 +1,5 @@
 const {ReS} = require('../services/util.service');
-const {Building, Location} = require('../models');
+const {Building, Location, Transition} = require('../models');
 
 const getAllForBuilding = async function(req, res, next) {
     try {
@@ -84,3 +84,14 @@ const remove = async function (req, res, next) {
 };
 module.exports.remove = remove;
 
+const getTransitions = async function(req, res, next) {
+    const id = req.params.id;
+    try {
+        const transitions = await Transition.findAll({where: {BuildingId: id}}) || [];
+        return res.json(transitions.map(t => t.toJSON()));
+    } catch (e) {
+        next(e);
+    }
+
+};
+module.exports.getTransitions = getTransitions;

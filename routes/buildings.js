@@ -29,7 +29,8 @@ module.exports = (router) => {
     router.get('/buildings', auth, querying.enableRelations, querying.enableLimits, BuildingController.getAll);                                                                                           // C
     router.post('/buildings', auth, querying.enableRelations, querying.enableLimits, BuildingController.create);                                                                                           // C
     router.get('/buildings/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), BuildingController.get);                                            // R
-    router.get('/buildings/:id/locations', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), BuildingController.getAllForBuilding);                                            // R
+    router.get('/buildings/:id/transitions', auth, querying.enableRelations, querying.enableLimits, access.createFilter({modelClass: null}), BuildingController.getTransitions);                                            // R
+    router.get('/buildings/:id/locations', auth, querying.enableRelations, querying.enableLimits, access.createFilter({modelClass: null}), BuildingController.getAllForBuilding);                                            // R
     router.patch('/buildings/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), BuildingController.update);                                            // U
     router.delete('/buildings/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), BuildingController.remove);
 };
