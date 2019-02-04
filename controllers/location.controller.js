@@ -43,7 +43,6 @@ const getAll = async function(req, res, next) {
         const config = Object.assign({}, req.queryConfig);
         config.include = config.include || [{
             model: Building,
-            attributes: ['name']
         }];
         let locations = await Location.findAll(config);
         locations = locations ? locations.map(l => l.toJSON()) : [];
