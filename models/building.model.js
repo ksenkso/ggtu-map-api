@@ -15,11 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         container: {
             type: DataTypes.STRING(48)
-        }
+        },
     });
 
     Building.associate = function (models) {
-        Building.hasMany(models.Location);
+        Building.hasMany(models.Location, {as: 'Locations'});
     };
 
     Building.defineStatic = (models) => {

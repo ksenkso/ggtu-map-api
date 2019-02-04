@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     Location.associate = function (models) {
         Location.hasMany(models.Place);
         Location.belongsTo(models.Building);
+        Location.hasOne(models.Building, {as: 'StartLocation', allowNull: true, defaultValue: null, constraints: false});
     };
 
     return Location;
