@@ -3,7 +3,7 @@ const path = require('path');
 const debug = require('debug')('App:Locations');
 const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
-const {Location, Place, Building} = require('../models');
+const {Location, Place, Building, TransitionView} = require('../models');
 
 const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
 /**
@@ -17,15 +17,11 @@ const create = async function (req, res, next) {
     const {name, map, BuildingId} = req.body;
     const errors = [];
     if (!name) {
-        errors.push(new Error('Укажите название локации.'))
+        errors.push(new Error('Укажите название локации.'));
     }
     if (!errors.length) {
         try {
-            /**
-             * @type Location
-             */
             const location = await Location.create({name, map, BuildingId});
-
             const output = location.toJSON();
             return ReS(res, output, 201);
         } catch (e) {
@@ -123,7 +119,7 @@ const upload = async function(req, res, next) {
     if (!file) {
         errors.push(new Error('Загрузите файл.'));
     } else if (file.mimetype !== 'image/svg+xml') {
-        errors.push(new Error('Файл карты должен быть в формате SVG, получено: ' + file.mimetype))
+        errors.push(new Error('Файл карты должен быть в формате SVG, получено: ' + file.mimetype));
     }
     if (!errors.length) {
         const location = req.location;
@@ -157,3 +153,28 @@ const upload = async function(req, res, next) {
     }
 };
 module.exports.upload = upload;
+
+const getObjects = async function(req, res, next) {
+    const LocationId = req.params.id;
+    const location = req.location;
+    try {
+        const queries = [
+            Place.findAll({where: {LocationId}, include: {association: 'Props'}}),
+            TransitionView.findAll({where: {LocationId}, include: {association: 'Transition'}})
+        ];
+        if (location.BuildingId === null) {
+            queries.push(Building.findAll());
+        }
+        const [places, transitionViews, buildings = []] = await Promise.all(queries);
+        const output = {
+            places,
+            transitionViews,
+            buildings
+        };
+        return res.json(output);
+
+    } catch (e) {
+        return next(e);
+    }
+};
+module.exports.getObjects = getObjects;
