@@ -22,11 +22,42 @@ const access = new PlacesFilter();
  * @param router
  */
 module.exports = (router) => {
-    router.post('/places', auth, querying.enableRelations, querying.enableLimits, PlaceController.create);                                                                                           // C
-    router.get('/places', auth, querying.enableRelations, querying.enableLimits, PlaceController.getAll);                                            // R
-    router.get('/places/expanded', auth, querying.enableRelations, querying.enableLimits, PlaceController.getExpanded);                                            // R
-    router.get('/places/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), PlaceController.get);                                            // R
-    router.get('/places/:id/expanded', auth, querying.enableRelations, querying.enableLimits, PlaceController.getExpandedById);                                            // R
-    router.patch('/places/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), PlaceController.update);                                            // U
-    router.delete('/places/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), PlaceController.remove);
+    router.post('/places',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        PlaceController.create,
+    );
+    router.get('/places',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        PlaceController.getAll,
+    );
+    router.get('/places/:id',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        access.createFilter({
+            include: [{
+                association: 'Props',
+                attributes: ['name','value']
+            }]
+        }),
+        PlaceController.get,
+    );
+    router.patch('/places/:id',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        access.createFilter(),
+        PlaceController.update,
+    );
+    router.delete('/places/:id',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        access.createFilter(),
+        PlaceController.remove,
+    );
 };
