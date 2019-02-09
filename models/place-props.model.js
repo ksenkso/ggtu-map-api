@@ -6,15 +6,13 @@ module.exports = (sequelize, DataTypes) => {
      * @extends Sequelize.Model
      */
     const PlaceProps = sequelize.define('PlaceProps', {
-        meta: DataTypes.TEXT
-    });
+        name: DataTypes.STRING(32),
+        value: DataTypes.STRING(128)
+    }, {timestamps: false});
 
     PlaceProps.associate = function (models) {
         PlaceProps.belongsTo(models.Place);
     };
-
-    PlaceProps.propsList = ['meta'];
-
 
     return PlaceProps;
 };
