@@ -15,28 +15,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Place.associate = function (models) {
         Place.belongsTo(models.Location);
-        Place.hasMany(models.PlaceProps);
-        Place.hasMany(models.CabinetProps);
-        Place.hasMany(models.WCProps);
-        Place.hasMany(models.GymProps);
-    };
-    Place.defineStatic = function (models) {
-        Place.getPropsClass = function (type) {
-            debug('Selecting dynamic model props class for type ' + type);
-            switch (type) {
-                case 'cabinet': {
-                    return models.CabinetProps;
-                }
-                case 'wc': {
-                    return models.WCProps;
-                }
-                case 'gym': {
-                    return models.GymProps;
-                }
-                default:
-                    return models.PlaceProps;
-            }
-        };
+        Place.hasMany(models.PlaceProps, {as: 'Props'});
     };
 
     Place.hook('afterSave', async (place, options) => {
