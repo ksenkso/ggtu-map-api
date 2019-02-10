@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     TransitionView.associate = function (models) {
         TransitionView.belongsTo(models.Location);
         TransitionView.belongsTo(models.Transition);
+        TransitionView.hasOne(models.MapObject);
     };
 
     TransitionView.defineStatic = () => {

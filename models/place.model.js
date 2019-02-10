@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     Place.associate = function (models) {
         Place.belongsTo(models.Location);
         Place.hasMany(models.PlaceProps, {as: 'Props'});
+        Place.hasOne(models.MapObject);
     };
 
     Place.hook('afterSave', async (place, options) => {

@@ -1,6 +1,6 @@
 const PlaceController = require('../controllers/place.controller');
 const {auth, querying} = require('../middleware');
-const {Place} = require('../models');
+const {Place, MapObject} = require('../models');
 const AccessFilter = require('../middleware/AccessFilter');
 class PlacesFilter extends AccessFilter {
     constructor() {
@@ -42,6 +42,9 @@ module.exports = (router) => {
             include: [{
                 association: 'Props',
                 attributes: ['name','value']
+            }, {
+                model: MapObject,
+                attributes: ['id', 'PlaceId']
             }]
         }),
         PlaceController.get,
