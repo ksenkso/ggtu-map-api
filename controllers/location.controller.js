@@ -1,9 +1,21 @@
+/**
+ * @typedef {{x: number, y: number, z?: number}} Point3D
+ */
+/**
+ * @typedef {{position: Point3D, siblings: number[], ObjectId: number}} AdjacencyNode
+ */
+/**
+ * @typedef {AdjacencyNode[]} AdjacencyList
+ *
+ */
+
 const fs = require('fs');
 const path = require('path');
 const debug = require('debug')('App:Locations');
 const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
-const {Location, Place, Building, TransitionView} = require('../models');
+const {Location, Place, Building, TransitionView, PathVertex, MapObject, PathEdge} = require('../models');
+const {Op} = require('sequelize');
 
 const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
 /**
@@ -34,7 +46,7 @@ const create = async function (req, res, next) {
 };
 module.exports.create = create;
 
-const getAll = async function(req, res, next) {
+const getAll = async function (req, res, next) {
     try {
         const config = Object.assign({}, req.queryConfig);
         config.include = config.include || [{
@@ -49,7 +61,7 @@ const getAll = async function(req, res, next) {
 };
 module.exports.getAll = getAll;
 
-const getPlaces = async function(req, res, next) {
+const getPlaces = async function (req, res, next) {
     try {
         const config = Object.assign({}, req.queryConfig);
         debug(config);
@@ -71,7 +83,7 @@ const get = async function (req, res) {
 };
 module.exports.get = get;
 
-const getRoot = async function(req, res, next) {
+const getRoot = async function (req, res, next) {
     try {
         const location = await Location.findOne({where: {BuildingId: null}});
         if (location) {
@@ -79,8 +91,7 @@ const getRoot = async function(req, res, next) {
         } else {
             const error = new Error('Корневая локация не найдена');
             error.status = 404;
-            next(error);
-        }
+            next(error);}
     } catch (e) {
         next(e);
     }
@@ -108,7 +119,7 @@ const remove = async function (req, res, next) {
 };
 module.exports.remove = remove;
 
-const upload = async function(req, res, next) {
+const upload = async function (req, res, next) {
     const errors = [];
     if (!req.files) {
         errors.push(new Error('Загрузите файл.'));
@@ -153,7 +164,7 @@ const upload = async function(req, res, next) {
 };
 module.exports.upload = upload;
 
-const getObjects = async function(req, res, next) {
+const getObjects = async function (req, res, next) {
     const LocationId = req.params.id;
     const location = req.location;
     try {
@@ -177,3 +188,119 @@ const getObjects = async function(req, res, next) {
     }
 };
 module.exports.getObjects = getObjects;
+
+const getNavigationPath = async function (req, res, next) {
+    const LocationId = req.params.id;
+    try {
+        const expandedVertices = await PathVertex.findAll({
+            where: {LocationId},
+            include: {
+                association: PathVertex.Object,
+                include: [{
+                    association: MapObject.Place,
+                    attributes: ['name', 'type', 'container']
+                }, {association: MapObject.TransitionView, attributes: ['container', 'TransitionId']}]
+            },
+            attributes: ['id', 'x', 'y', 'z']
+        });
+        const ids = expandedVertices.map(v => v.id);
+        const edges = await PathEdge.findAll({
+            where: {
+                [Op.or]: [
+                    {StartId: {[Op.in]: ids}},
+                    {EndId: {[Op.in]: ids}},
+                ]
+            },
+        }).map(e => e.toJSON());
+        const vertices = expandedVertices.map(v => {
+            const entry = v.toJSON();
+            if (entry.Object.Place) {
+                entry.type = 'Place';
+                entry.Place = entry.Object.Place;
+                delete entry.Object.TransitionView;
+            }
+            if (entry.Object.TransitionView) {
+                entry.type = 'TransitionView';
+                entry.TransitionView = entry.Object.TransitionView;
+                delete entry.Object.Place;
+            }
+            return entry;
+        });
+        const list = mergeToAdjacencyList(vertices, edges);
+        res.json(list);
+    } catch (e) {
+        next(e);
+    }
+};
+module.exports.getNavigationPath = getNavigationPath;
+
+const updatePath = async function (req, res, next) {
+    const LocationId = +req.params.id;
+    /**
+     * @type AdjacencyList
+     */
+    const graph = req.body;
+    if (graph.length) {
+        try {
+            //     Remove previous graph from DB
+            await PathVertex.destroy({where: {LocationId}});
+            const vertices = await PathVertex.bulkCreate(graph.map(node => ({
+                x: node.position.x,
+                y: node.position.y,
+                z: node.position.z,
+                LocationId,
+                ObjectId: node.ObjectId,
+            })));
+            const edgesToCreate = [];
+            vertices.forEach((vertex, index) => {
+                graph[index].siblings.forEach(siblingIndex => {
+                    edgesToCreate.push({StartId: vertex.id, EndId: vertices[siblingIndex].id});
+                });
+            });
+            const edges = await PathEdge.bulkCreate(edgesToCreate);
+            return res.json(mergeToAdjacencyList(vertices, edges));
+        } catch (e) {
+            next(e);
+        }
+    } else {
+        const error = new Error('Граф путей не может быть пустым');
+        error.status = 400;
+        next(error);
+    }
+
+
+};
+module.exports.updatePath = updatePath;
+
+/**
+ *
+ * @param vertices
+ * @param edges
+ * @return {Array}
+ */
+function mergeToAdjacencyList(vertices, edges) {
+    const groupedEdges = {};
+    edges.forEach(edge => {
+        if (groupedEdges[edge.StartId]) {
+            groupedEdges[edge.StartId].push(edge);
+        } else {
+            groupedEdges[edge.StartId] = [edge];
+        }
+    });
+    const list = [];
+    for (let i = 0; i < vertices.length; i++) {
+        const id = vertices[i].id;
+        const entry = {
+            position: {x: vertices[i].x, y: vertices[i].y, z: vertices[i].z},
+            Object: vertices[i][vertices[i].type],
+            type: vertices[i].type
+        };
+        if (groupedEdges[id]) {
+            entry.edges = groupedEdges[id].map(edge => vertices.findIndex(v => v.id === edge.EndId));
+        } else {
+            entry.edges = [];
+        }
+        list.push(entry);
+    }
+    return list;
+}

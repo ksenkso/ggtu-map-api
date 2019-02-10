@@ -1,6 +1,6 @@
 const debug = require('debug')('App:Controller:Place');
 const {ReS} = require('../services/util.service');
-const {Place, PlaceProps} = require('../models');
+const {Place, PlaceProps, MapObject} = require('../models');
 /**
  *
  * @param req
@@ -82,7 +82,9 @@ module.exports.remove = remove;
 
 const getAll = async function(req, res, next) {
     try {
-        let places = await Place.findAll();
+        const include = {model: MapObject, attributes: ['id', 'PlaceId']};
+        const config = Object.assign({}, {include}, req.queryConfig);
+        let places = await Place.findAll(config);
         return res.json(places.map(p => p.toJSON()));
     } catch (e) {
         next(e);

@@ -30,6 +30,8 @@ module.exports = (router) => {
     router.get('/locations/:id', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), LocationController.get);
     router.get('/locations/:id/places', auth, querying.enableLimits, querying.enableWhere, access.createFilter(), LocationController.getPlaces);
     router.get('/locations/:id/objects', auth, querying.enableLimits, querying.enableWhere, access.createFilter(), LocationController.getObjects);
+    router.get('/locations/:id/paths', auth, querying.enableLimits, querying.enableWhere, access.createFilter(), LocationController.getNavigationPath);
+    router.put('/locations/:id/paths', auth, querying.enableLimits, querying.enableWhere, access.createFilter(), LocationController.updatePath);
     router.patch('/locations/:id', auth, access.createFilter(), LocationController.update);
     router.patch('/locations/:id/upload', auth, access.createFilter(), fileUpload(), LocationController.upload);
     router.delete('/locations/:id', auth, access.createFilter(), LocationController.remove);
