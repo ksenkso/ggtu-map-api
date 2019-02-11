@@ -169,8 +169,8 @@ const getObjects = async function (req, res, next) {
     const location = req.location;
     try {
         const queries = [
-            Place.findAll({where: {LocationId}, include: {association: 'Props'}}),
-            TransitionView.findAll({where: {LocationId}, include: {association: 'Transition'}})
+            Place.findAll({where: {LocationId}, include: [{association: 'Props'}, {association: 'MapObject'}]}),
+            TransitionView.findAll({where: {LocationId}, include: [{association: 'Transition'}, {association: 'MapObject'}]})
         ];
         if (location.BuildingId === null) {
             queries.push(Building.findAll());
