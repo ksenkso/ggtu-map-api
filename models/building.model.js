@@ -35,15 +35,15 @@ module.exports = (sequelize, DataTypes) => {
             if (shouldUpdate) {
                 debug('Id - ' + building.id);
                 const location = await models.Location.findOne({where: {BuildingId: null}});
-                updateContainerOnMap(location, building.container, building.id);
+                updateContainerOnMap(location, building.container, {id: building.id});
             }
         });
         Building.hook('afterDestroy', async (building) => {
             debug('afterDestroy');
             debug('Id - ' + building.id);
             const location = await models.Location.findOne({where: {BuildingId: null}});
-            updateContainerOnMap(location, building.container);
-        })
+            updateContainerOnMap(location, building.container, {id: null});
+        });
     };
 
 

@@ -30,13 +30,13 @@ module.exports = (sequelize, DataTypes) => {
         }
         if (shouldUpdate) {
             const location = await place.getLocation();
-            updateContainerOnMap(location, place.container, place.id);
+            updateContainerOnMap(location, place.container, {id: place.id});
         }
     });
 
     Place.hook('afterDestroy', async (place) => {
         const location = await place.getLocation();
-        updateContainerOnMap(location, place.container);
+        updateContainerOnMap(location, place.container, {id: null});
     });
     return Place;
 };
