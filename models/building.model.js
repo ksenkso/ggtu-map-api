@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Building.associate = function (models) {
-        Building.hasMany(models.Location, {as: 'Locations'});
+        Building.hasMany(models.Location/*, {as: 'Locations'}*/);
     };
 
     Building.defineStatic = (models) => {
