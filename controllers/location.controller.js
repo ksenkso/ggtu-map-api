@@ -26,14 +26,14 @@ const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {name, map, BuildingId} = req.body;
+    const {name, map, BuildingId, floor} = req.body;
     const errors = [];
     if (!name) {
         errors.push(new Error('Укажите название локации.'));
     }
     if (!errors.length) {
         try {
-            const location = await Location.create({name, map, BuildingId});
+            const location = await Location.create({name, map, BuildingId, floor});
             const output = location.toJSON();
             return ReS(res, output, 201);
         } catch (e) {

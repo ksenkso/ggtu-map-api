@@ -1,5 +1,5 @@
 'use strict';
-const debug = require('debug')('Model:Building');
+// const debug = require('debug')('Model:Building');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -8,8 +8,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     const Location = sequelize.define('Location', {
         map: DataTypes.STRING(10),
-        name: DataTypes.STRING(100)
-    });
+        name: DataTypes.STRING(100),
+        floor: DataTypes.INTEGER
+    }, {timestamps: false});
 
     Location.associate = function (models) {
         Location.hasMany(models.Place);
