@@ -7,6 +7,11 @@ module.exports = (sequelize, DataTypes) => {
      * @extends Sequelize.Model
      */
     const PathVertex = sequelize.define('PathVertex', {
+        id: {
+            primaryKey: true,
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4
+        },
         x: DataTypes.INTEGER(),
         y: DataTypes.INTEGER(),
         z: {

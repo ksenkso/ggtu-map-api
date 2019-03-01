@@ -1,12 +1,18 @@
 'use strict';
 // const debug = require('debug')('App:Model:PathEdge');
 
-module.exports = (sequelize) => {
+module.exports = (sequelize, DataTypes) => {
     /**
      * @class PathEdge
      * @extends Sequelize.Model
      */
-    const PathEdge = sequelize.define('PathEdge', {}, {timestamps: false});
+    const PathEdge = sequelize.define('PathEdge', {
+        id: {
+            primaryKey: true,
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4
+        }
+    }, {timestamps: false});
 
     PathEdge.associate = function (models) {
         PathEdge.Start = PathEdge.belongsTo(models.PathVertex, {as: 'Start'});
