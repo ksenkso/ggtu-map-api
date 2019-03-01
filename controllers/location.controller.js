@@ -214,15 +214,17 @@ const getNavigationPath = async function (req, res, next) {
         }).map(e => e.toJSON());
         const vertices = expandedVertices.map(v => {
             const entry = v.toJSON();
-            if (entry.Object.Place) {
-                entry.type = 'Place';
-                entry.Place = entry.Object.Place;
-                delete entry.Object.TransitionView;
-            }
-            if (entry.Object.TransitionView) {
-                entry.type = 'TransitionView';
-                entry.TransitionView = entry.Object.TransitionView;
-                delete entry.Object.Place;
+            if (entry.Object) {
+                if (entry.Object.Place) {
+                    entry.type = 'Place';
+                    entry.Place = entry.Object.Place;
+                    delete entry.Object.TransitionView;
+                }
+                if (entry.Object.TransitionView) {
+                    entry.type = 'TransitionView';
+                    entry.TransitionView = entry.Object.TransitionView;
+                    delete entry.Object.Place;
+                }
             }
             return entry;
         });
@@ -279,27 +281,28 @@ module.exports.updatePath = updatePath;
  * @return {Array}
  */
 function mergeToAdjacencyList(vertices, edges) {
-    const groupedEdges = {};
-    edges.forEach(edge => {
-        if (groupedEdges[edge.StartId]) {
-            groupedEdges[edge.StartId].push(edge);
-        } else {
-            groupedEdges[edge.StartId] = [edge];
-        }
-    });
     const list = [];
     for (let i = 0; i < vertices.length; i++) {
         const id = vertices[i].id;
         const entry = {
             position: {x: vertices[i].x, y: vertices[i].y, z: vertices[i].z},
             Object: vertices[i][vertices[i].type],
-            type: vertices[i].type
+            type: vertices[i].type,
+            siblings: []
         };
-        if (groupedEdges[id]) {
-            entry.edges = groupedEdges[id].map(edge => vertices.findIndex(v => v.id === edge.EndId));
-        } else {
-            entry.edges = [];
-        }
+        edges.forEach(edge => {
+            if (edge.StartId === id) {
+                entry.siblings.push({
+                    index: vertices.findIndex(v => v.id === edge.EndId),
+                    id: edge.id
+                });
+            } else if (edge.EndId === id) {
+                entry.siblings.push({
+                    index: vertices.findIndex(v => v.id === edge.StartId),
+                    id: edge.id
+                });
+            }
+        });
         list.push(entry);
     }
     return list;
