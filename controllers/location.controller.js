@@ -2,11 +2,32 @@
  * @typedef {{x: number, y: number, z?: number}} Point3D
  */
 /**
- * @typedef {{position: Point3D, siblings: number[], ObjectId: number}} AdjacencyNode
+ * @typedef {{position: Point3D, siblings: Array<{id: string, index: number}>, ObjectId: number}} AdjacencyNode
  */
 /**
  * @typedef {AdjacencyNode[]} AdjacencyList
  *
+ */
+
+/**
+ * @typedef {{id: string, position: Point3D, ObjectId: number}} SerializedWayPoint
+ */
+/**
+ * @typedef {{id: string, StartId: string, EndId: string}} SerializedWayEdge
+ */
+/**
+ *
+ * @typedef {{
+ *  vertices: {
+ *    created: SerializedWayPoint[],
+ *    updated: SerializedWayPoint[],
+ *    deleted: string[],
+ *  },
+ *  edges: {
+ *    created: SerializedWayEdge[],
+ *    deleted: string[],
+ *   }
+ * }} GraphDiff
  */
 
 const fs = require('fs');
@@ -239,28 +260,50 @@ module.exports.getNavigationPath = getNavigationPath;
 const updatePath = async function (req, res, next) {
     const LocationId = +req.params.id;
     /**
-     * @type AdjacencyList
+     * @type GraphDiff
      */
     const graph = req.body;
-    if (graph.length) {
+    if (graph) {
         try {
-            //     Remove previous graph from DB
-            await PathVertex.destroy({where: {LocationId}});
-            const vertices = await PathVertex.bulkCreate(graph.map(node => ({
-                x: node.position.x,
-                y: node.position.y,
-                z: node.position.z,
-                LocationId,
-                ObjectId: node.ObjectId,
-            })));
-            const edgesToCreate = [];
-            vertices.forEach((vertex, index) => {
-                graph[index].siblings.forEach(siblingIndex => {
-                    edgesToCreate.push({StartId: vertex.id, EndId: vertices[siblingIndex].id});
-                });
-            });
-            const edges = await PathEdge.bulkCreate(edgesToCreate);
-            return res.json(mergeToAdjacencyList(vertices, edges));
+            if (graph.vertices) {
+                if (graph.vertices.deleted && graph.vertices.deleted.length) {
+                    await PathVertex.destroy({where: {id: {[Op.in]: graph.vertices.deleted}}});
+                }
+                if (graph.vertices.created && graph.vertices.created.length) {
+                    await PathVertex.bulkCreate(graph.vertices.created.map(vertex => ({
+                        id: vertex.id,
+                        x: vertex.position.x,
+                        y: vertex.position.y,
+                        z: vertex.position.z,
+                        ObjectId: vertex.ObjectId,
+                        LocationId
+                    })));
+                }
+                if (graph.vertices.updated && graph.vertices.updated.length) {
+                    const toUpdate = graph.vertices.updated.map(vertex => {
+                        return PathVertex.update({
+                            x: vertex.position.x,
+                            y: vertex.position.y,
+                            z: vertex.position.z,
+                            ObjectId: vertex.ObjectId
+                        }, {where: {id: vertex.id}});
+                    });
+                    await Promise.all(toUpdate);
+                }
+            }
+            if (graph.edges) {
+                if (graph.edges.created && graph.edges.created.length) {
+                    await PathEdge.bulkCreate(graph.edges.created.map(edge => ({
+                        id: edge.id,
+                        StartId: edge.StartId,
+                        EndId: edge.EndId
+                    })));
+                }
+                if (graph.edges.deleted && graph.edges.deleted.length) {
+                    await PathEdge.destroy({where: {id: {[Op.in]: graph.edges.deleted}}})
+                }
+            }
+            return getNavigationPath(req, res, next);
         } catch (e) {
             next(e);
         }
@@ -288,7 +331,8 @@ function mergeToAdjacencyList(vertices, edges) {
             position: {x: vertices[i].x, y: vertices[i].y, z: vertices[i].z},
             Object: vertices[i][vertices[i].type],
             type: vertices[i].type,
-            siblings: []
+            siblings: [],
+            id
         };
         edges.forEach(edge => {
             if (edge.StartId === id) {
