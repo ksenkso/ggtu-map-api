@@ -324,30 +324,27 @@ module.exports.updatePath = updatePath;
  * @return {Array}
  */
 function mergeToAdjacencyList(vertices, edges) {
-    const list = [];
-    for (let i = 0; i < vertices.length; i++) {
-        const id = vertices[i].id;
+    return vertices.map(vertex => {
         const entry = {
-            position: {x: vertices[i].x, y: vertices[i].y, z: vertices[i].z},
-            Object: vertices[i][vertices[i].type],
-            type: vertices[i].type,
+            position: {x: vertex.x, y: vertex.y, z: vertex.z},
+            Object: vertex[vertex.type],
+            type: vertex.type,
             siblings: [],
-            id
+            id: vertex.id
         };
         edges.forEach(edge => {
-            if (edge.StartId === id) {
+            if (edge.StartId === vertex.id) {
                 entry.siblings.push({
                     index: vertices.findIndex(v => v.id === edge.EndId),
                     id: edge.id
                 });
-            } else if (edge.EndId === id) {
+            } else if (edge.EndId === vertex.id) {
                 entry.siblings.push({
                     index: vertices.findIndex(v => v.id === edge.StartId),
                     id: edge.id
                 });
             }
         });
-        list.push(entry);
-    }
-    return list;
+        return entry;
+    });
 }
