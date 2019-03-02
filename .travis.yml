@@ -1,12 +1,12 @@
 language: node_js
 node_js:
-  - "10.15.2"
+- 10.15.2
 deploy:
-  - provider: script
-    skip_cleanup: true
-    script: bash .travis/deploy.sh
-    on:
-      branch: master
+- provider: script
+  skip_cleanup: true
+  script: bash .travis/deploy.sh
+  on:
+    branch: master
 addons:
   ssh_known_hosts:
   - 33.140.199.148
