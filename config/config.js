@@ -1,4 +1,4 @@
-require('dotenv').config();//instatiate environment variables
+require('dotenv').config();
 
 let CONFIG = {}; //Make this global to use all over the application
 
