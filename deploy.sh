@@ -6,7 +6,4 @@ git remote add old https://github.com/ksenkso/ggtu-map-api.git
 git remote add production ssh://root@37.140.199.148/app
 git fetch --unshallow old
 git push production master # push our updates
-ssh root@37.140.199.148 << EOF
-cd /app
-npm install
-EOF
+ssh root@37.140.199.148 'bash update.sh'
