@@ -8,6 +8,7 @@ require('./buildings')(router);
 require('./users')(router);
 require('./places')(router);
 require('./transitions')(router);
+require('./search')(router);
 require('./transition-views')(router);
 
 /* GET home page. */
