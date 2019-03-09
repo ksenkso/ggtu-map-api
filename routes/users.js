@@ -8,13 +8,14 @@ class UsersFilter extends AccessFilter {
             modelClass: User,
             errorMessage: 'Только администратор может добавлять новых пользователей с назаначением роли',
             modelName: 'userModel',
-            notFoundMessage: 'Пользователь не найден'
+            notFoundMessage: 'Пользователь не найден',
+            check({user}) {
+                return user.role === 'root';
+            }
         });
     }
 
-    check({user}) {
-        return user.role === 'root';
-    }
+
 }
 const access = new UsersFilter();
 /**

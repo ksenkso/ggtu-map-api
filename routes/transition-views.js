@@ -8,13 +8,14 @@ class ViewsFilter extends AccessFilter {
             modelClass: TransitionView,
             errorMessage: 'Только администратор может изменять информацию о переходах',
             modelName: 'view',
-            notFoundMessage: 'Переход не найден.'
+            notFoundMessage: 'Переход не найден.',
+            check({user}) {
+                return user.role === 'root';
+            }
         });
     }
 
-    check({user}) {
-        return user.role === 'root';
-    }
+
 }
 const access = new ViewsFilter();
 
@@ -28,7 +29,11 @@ module.exports = (router) => {
     router.get(
         '/transition-views/:id',
         auth,
-        access.createFilter(),
+        access.createFilter({
+            check() {
+                return true
+            }
+        }),
         ViewsController.get
     );
     router.patch(

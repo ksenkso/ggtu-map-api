@@ -8,12 +8,11 @@ class TransitionsFilter extends AccessFilter {
             modelClass: Transition,
             errorMessage: 'Только администратор может изменять информацию о переходах',
             modelName: 'transition',
-            notFoundMessage: 'Переход не найден.'
+            notFoundMessage: 'Переход не найден.',
+            check({user}) {
+                return user.role === 'root';
+            }
         });
-    }
-
-    check({user}) {
-        return user.role === 'root';
     }
 }
 const access = new TransitionsFilter();
@@ -36,7 +35,11 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
-        access.createFilter(),
+        access.createFilter({
+            check() {
+                return true
+            }
+        }),
         TransitionsController.get
     );
     router.patch(

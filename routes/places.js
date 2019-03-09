@@ -8,13 +8,14 @@ class PlacesFilter extends AccessFilter {
             modelClass: Place,
             errorMessage: 'Только администратор может изменять информацию о местах',
             modelName: 'place',
-            notFoundMessage: 'Место не найдено.'
+            notFoundMessage: 'Место не найдено.',
+            check({user}) {
+                return user.role === 'root';
+            }
         });
     }
 
-    check({user}) {
-        return user.role === 'root';
-    }
+
 }
 const access = new PlacesFilter();
 /**
@@ -45,7 +46,10 @@ module.exports = (router) => {
             }, {
                 model: MapObject,
                 attributes: ['id', 'PlaceId']
-            }]
+            }],
+            check() {
+                return true;
+            }
         }),
         PlaceController.get,
     );
