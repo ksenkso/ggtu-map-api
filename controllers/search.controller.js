@@ -111,7 +111,7 @@ const find = async function (req, res, next) {
                     const place = cabinet.toJSON();
                     const location = cabinet.Location;
                     delete place.Location;
-                    return res.json({place, location});
+                    return res.json([{place, location, building: building.toJSON()}]);
                 } else {
                     const error = new Error('Кабинет не найден');
                     error.status = 404;
