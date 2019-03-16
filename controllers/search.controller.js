@@ -15,18 +15,16 @@ async function findPlacesInContext(item, {location, building} = {}) {
             name: {
                 [Op.like]: `%${item.number}%`
             }
-        }
+        };
     } else {
         config.attributes = {include: [[sequelize.fn('levenshtein', item.name, sequelize.col('Place.name')), 'distance']]};
         config.having = {
             distance: {
                 [Op.lt]: 3
             }
-        }
+        };
     }
     if (location) {
-        if (!config.where) {
-        }
         config.where = {
             LocationId: location.id
         };
@@ -39,7 +37,7 @@ async function findPlacesInContext(item, {location, building} = {}) {
                     location,
                     building,
                     place: data
-                }
+                };
             });
         }
     }
@@ -57,8 +55,8 @@ async function findPlacesInContext(item, {location, building} = {}) {
                     location: placeLocation,
                     building,
                     place: data
-                }
-            })
+                };
+            });
         }
     }
     if (!(location || building)) {
@@ -75,8 +73,8 @@ async function findPlacesInContext(item, {location, building} = {}) {
                     location: placeLocation,
                     building: placeBuilding,
                     place: data
-                }
-            })
+                };
+            });
         }
     }
     return [];
@@ -172,7 +170,7 @@ const find = async function (req, res, next) {
         }
         return res.status(204);
     } catch (e) {
-        return next(e)
+        return next(e);
     }
 };
 module.exports.find = find;
