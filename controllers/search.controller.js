@@ -1,6 +1,7 @@
-const {Building, Place, Location, sequelize} = require('../models');
+const {Building, Place, Location, PlaceProps, sequelize} = require('../models');
 const {Op} = require('sequelize');
-const parse = require('ggtu-search-utils');
+const parse = require('../utils/search');
+
 
 async function findPlacesInContext(item, {location, building} = {}) {
     // Find places in specified location
@@ -10,7 +11,39 @@ async function findPlacesInContext(item, {location, building} = {}) {
             model: Location
         }]
     };
-    if (item.number) {
+    switch (item.placeType) {
+        case 'wc': {
+            config.where = {
+                type: 'wc',
+            };
+            config.include.push({
+                model: PlaceProps,
+                as: 'Props',
+                where: {
+                    name: 'sex',
+                    value: item.sex
+                }
+            });
+            break;
+        }
+        case 'cabinet': {
+            if (item.number) {
+                config.where = {
+                    name: {
+                        [Op.like]: `%${item.number}%`
+                    }
+                };
+            } else {
+                config.attributes = {include: [[sequelize.fn('levenshtein', item.name, sequelize.col('Place.name')), 'distance']]};
+                config.having = {
+                    distance: {
+                        [Op.lt]: 3
+                    }
+                };
+            }
+        }
+    }
+    /*if (item.number) {
         config.where = {
             name: {
                 [Op.like]: `%${item.number}%`
@@ -23,7 +56,7 @@ async function findPlacesInContext(item, {location, building} = {}) {
                 [Op.lt]: 3
             }
         };
-    }
+    }*/
     if (location) {
         config.where = {
             LocationId: location.id
@@ -80,6 +113,7 @@ async function findPlacesInContext(item, {location, building} = {}) {
     return [];
 
 }
+
 const find = async function (req, res, next) {
     try {
         const input = req.query.q;
@@ -92,7 +126,7 @@ const find = async function (req, res, next) {
         if (parsed.length === 1 && parsed[0].type === 'shortAddress') {
             const building = await Building.find({
                 where: {
-                    type: parsed[0].building.type,
+                    type: parsed[0].building.buildingType,
                     name: {[Op.like]: `%${+parsed[0].building.number}%`}
                 }
             });
