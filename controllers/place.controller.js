@@ -9,7 +9,8 @@ const {Place, PlaceProps, MapObject} = require('../models');
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {LocationId, name, type, container, Props} = req.body;
+    const {LocationId, name, type, container} = req.body;
+    let {props} = req.body;
     const errors = [];
     if (!LocationId) {
         errors.push(new Error('Место не привязано к локации.'));
@@ -28,10 +29,16 @@ const create = async function (req, res, next) {
             /**
              * @type Place
              */
-            const place = await Place.create({LocationId, name, type, container, Props}, {include: [{association: 'Props'}]});
+            const place = await Place.create({
+                LocationId,
+                name,
+                type,
+                container,
+                Props: PlaceProps.expandProps(props)
+            }, {include: [{association: 'Props'}]});
             debug('created');
 
-            return ReS(res, place.toJSON(), 201);
+            return ReS(res, place.prepare(), 201);
         } catch (e) {
             next(e);
         }
@@ -43,22 +50,27 @@ const create = async function (req, res, next) {
 module.exports.create = create;
 
 const get = async function (req, res) {
-    return ReS(res, req.place.toJSON());
+    return ReS(res, req.place.prepare());
 };
 module.exports.get = get;
 
 const update = async function (req, res, next) {
-    const id = req.params.id;
-    const props = req.body.Props;
+    const {id} = req.params;
+    let {props} = req.body;
     delete req.body.props;
     try {
         const updated = await req.place.update(req.body);
         const output = updated.toJSON();
         if (props) {
+            props = PlaceProps.expandProps(props);
             await PlaceProps.destroy({where: {PlaceId: id}});
             if (props.length) {
-                const newProps = await PlaceProps.bulkCreate(props.map(prop => {prop.PlaceId = id; return prop;}));
-                output.Props = newProps.map(p => ({name: p.name, value: p.value}));
+                await PlaceProps.bulkCreate(props.map(prop => {
+                    prop.PlaceId = id;
+                    return prop;
+                }));
+                output.props = PlaceProps.prepareProps(props);
+                delete output.Props;
             }
         }
         return res.json(output);
@@ -80,12 +92,12 @@ const remove = async function (req, res, next) {
 };
 module.exports.remove = remove;
 
-const getAll = async function(req, res, next) {
+const getAll = async function (req, res, next) {
     try {
         const include = {model: MapObject, attributes: ['id', 'PlaceId']};
         const config = Object.assign({}, {include}, req.queryConfig);
         let places = await Place.findAll(config);
-        return res.json(places.map(p => p.toJSON()));
+        return res.json(places.map(p => p.prepare()));
     } catch (e) {
         next(e);
     }

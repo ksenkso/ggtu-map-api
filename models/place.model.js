@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
         Place.belongsTo(models.Location);
         Place.hasMany(models.PlaceProps, {as: 'Props'});
         Place.hasOne(models.MapObject);
+        Place.prototype.prepare = function () {
+            const place = this.toJSON();
+            place.props = models.PlaceProps.prepareProps(place.Props);
+            delete place.Props;
+            return place;
+        };
     };
 
     Place.hook('afterSave', async (place, options) => {

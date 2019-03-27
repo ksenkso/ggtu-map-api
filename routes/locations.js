@@ -56,7 +56,7 @@ module.exports = (router) => {
         querying.enableLimits,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         LocationController.get);
@@ -67,7 +67,7 @@ module.exports = (router) => {
         querying.enableWhere,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         LocationController.getPlaces
@@ -79,7 +79,7 @@ module.exports = (router) => {
         querying.enableWhere,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         LocationController.getObjects
@@ -91,7 +91,7 @@ module.exports = (router) => {
         querying.enableWhere,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         LocationController.getNavigationPath

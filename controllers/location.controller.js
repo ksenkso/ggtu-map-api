@@ -90,7 +90,7 @@ const getPlaces = async function (req, res, next) {
         config.where = config.where ? Object.assign(config.where, {LocationId}) : {LocationId};
         debug(config);
         let places = await Place.findAll(config);
-        places = places ? places.map(p => p.toJSON()) : [];
+        places = places ? places.map(p => p.prepare()) : [];
         return ReS(res, places, 200);
     } catch (e) {
         next(e);
@@ -196,7 +196,10 @@ const getObjects = async function (req, res, next) {
         if (location.BuildingId === null) {
             queries.push(Building.findAll());
         }
-        const [places, transitionViews, buildings = []] = await Promise.all(queries);
+        let [places, transitionViews, buildings = []] = await Promise.all(queries);
+        if (places && places.length) {
+            places = places.map(place => place.prepare());
+        }
         const output = {
             places,
             transitionViews,
@@ -300,7 +303,7 @@ const updatePath = async function (req, res, next) {
                     })));
                 }
                 if (graph.edges.deleted && graph.edges.deleted.length) {
-                    await PathEdge.destroy({where: {id: {[Op.in]: graph.edges.deleted}}})
+                    await PathEdge.destroy({where: {id: {[Op.in]: graph.edges.deleted}}});
                 }
             }
             return getNavigationPath(req, res, next);
