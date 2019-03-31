@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Transition.defineStatic = (models) => {
-        Transition.hook('beforeDestroy', async (transition) => {
+        Transition.addHook('beforeDestroy', async (transition) => {
             debug('Fetching views...');
             const views = await transition.getViews({include: [{model: models.Location}]});
             debug('Views fetched: ' + views.length);

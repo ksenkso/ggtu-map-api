@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Building.defineStatic = (models) => {
-        Building.hook('afterSave', async (building, options) => {
+        Building.addHook('afterSave', async (building, options) => {
             debug('afterSave');
             let shouldUpdate = false;
             for (let i = 0; i < options.fields.length; i++) {
@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
                 updateContainerOnMap(location, building.container, {id: building.id});
             }
         });
-        Building.hook('afterDestroy', async (building) => {
+        Building.addHook('afterDestroy', async (building) => {
             debug('afterDestroy');
             debug('Id - ' + building.id);
             const location = await models.Location.findOne({where: {BuildingId: null}});

@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         };
     };
 
-    Place.hook('afterSave', async (place, options) => {
+    Place.addHook('afterSave', async (place, options) => {
         debug('afterSave');
         let shouldUpdate = false;
         for (let i = 0; i < options.fields.length; i++) {
@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
         }
     });
 
-    Place.hook('afterDestroy', async (place) => {
+    Place.addHook('afterDestroy', async (place) => {
         const location = await place.getLocation();
         updateContainerOnMap(location, place.container, {id: null});
     });

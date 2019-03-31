@@ -18,13 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     TransitionView.defineStatic = () => {
-        TransitionView.hook('afterSave', async (view) => {
+        TransitionView.addHook('afterSave', async (view) => {
             debug('afterSave');
             const location = await view.getLocation();
             updateContainerOnMap(location, view.container, {id: view.id, 'transition-id': view.TransitionId});
         });
 
-        TransitionView.hook('afterDestroy', async (view) => {
+        TransitionView.addHook('afterDestroy', async (view) => {
             const location = await view.getLocation();
             updateContainerOnMap(location, view.container, {id: null, 'transition-id': null});
         });
