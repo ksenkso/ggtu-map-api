@@ -35,7 +35,9 @@ const path = require('path');
 const debug = require('debug')('App:Locations');
 const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
-const {Location, Place, Building, TransitionView, PathVertex, MapObject, PathEdge} = require('../models');
+const {Location, Place, Building, TransitionView, PathVertex, PathEdge} = require('../models');
+const {getLocationGraph} = require('../utils/paths');
+
 const {Op} = require('sequelize');
 
 const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
@@ -112,7 +114,8 @@ const getRoot = async function (req, res, next) {
         } else {
             const error = new Error('Корневая локация не найдена');
             error.status = 404;
-            next(error);}
+            next(error);
+        }
     } catch (e) {
         next(e);
     }
@@ -191,7 +194,10 @@ const getObjects = async function (req, res, next) {
     try {
         const queries = [
             Place.findAll({where: {LocationId}, include: [{association: 'Props'}, {association: 'MapObject'}]}),
-            TransitionView.findAll({where: {LocationId}, include: [{association: 'Transition'}, {association: 'MapObject'}]})
+            TransitionView.findAll({
+                where: {LocationId},
+                include: [{association: 'Transition'}, {association: 'MapObject'}]
+            })
         ];
         if (location.BuildingId === null) {
             queries.push(Building.findAll());
@@ -216,43 +222,7 @@ module.exports.getObjects = getObjects;
 const getNavigationPath = async function (req, res, next) {
     const LocationId = req.params.id;
     try {
-        const expandedVertices = await PathVertex.findAll({
-            where: {LocationId},
-            include: {
-                association: PathVertex.Object,
-                include: [{
-                    association: MapObject.Place,
-                    attributes: ['name', 'type', 'container']
-                }, {association: MapObject.TransitionView, attributes: ['container', 'TransitionId']}]
-            },
-            attributes: ['id', 'x', 'y', 'z']
-        });
-        const ids = expandedVertices.map(v => v.id);
-        const edges = await PathEdge.findAll({
-            where: {
-                [Op.or]: [
-                    {StartId: {[Op.in]: ids}},
-                    {EndId: {[Op.in]: ids}},
-                ]
-            },
-        }).map(e => e.toJSON());
-        const vertices = expandedVertices.map(v => {
-            const entry = v.toJSON();
-            if (entry.Object) {
-                if (entry.Object.Place) {
-                    entry.type = 'Place';
-                    entry.Place = entry.Object.Place;
-                    delete entry.Object.TransitionView;
-                }
-                if (entry.Object.TransitionView) {
-                    entry.type = 'TransitionView';
-                    entry.TransitionView = entry.Object.TransitionView;
-                    delete entry.Object.Place;
-                }
-            }
-            return entry;
-        });
-        const list = mergeToAdjacencyList(vertices, edges);
+        const list = await getLocationGraph(LocationId);
         res.json(list);
     } catch (e) {
         next(e);
@@ -319,35 +289,3 @@ const updatePath = async function (req, res, next) {
 
 };
 module.exports.updatePath = updatePath;
-
-/**
- *
- * @param vertices
- * @param edges
- * @return {Array}
- */
-function mergeToAdjacencyList(vertices, edges) {
-    return vertices.map(vertex => {
-        const entry = {
-            position: {x: vertex.x, y: vertex.y, z: vertex.z},
-            Object: vertex[vertex.type],
-            type: vertex.type,
-            siblings: [],
-            id: vertex.id
-        };
-        edges.forEach(edge => {
-            if (edge.StartId === vertex.id) {
-                entry.siblings.push({
-                    index: vertices.findIndex(v => v.id === edge.EndId),
-                    id: edge.id
-                });
-            } else if (edge.EndId === vertex.id) {
-                entry.siblings.push({
-                    index: vertices.findIndex(v => v.id === edge.StartId),
-                    id: edge.id
-                });
-            }
-        });
-        return entry;
-    });
-}
