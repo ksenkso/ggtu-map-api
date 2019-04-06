@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "await-to-js": "^2.1.1",
-    "bcrypt": "^3.0.4",
+    "bcrypt": "^3.0.5",
     "bcrypt-promise": "^2.0.0",
     "body-parser": "^1.18.3",
     "cheerio": "^1.0.0-rc.2",
@@ -33,7 +33,7 @@
     "pug": "^2.0.3",
     "randomstring": "^1.1.5",
     "request": "^2.88.0",
-    "sequelize": "^4.43.0",
+    "sequelize": "^4.43.1",
     "sequelize-cli": "^4.1.1",
     "serve-favicon": "~2.4.5",
     "sharp": "^0.20.8",
