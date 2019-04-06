@@ -3,28 +3,21 @@ const {Op} = require('sequelize');
 const parse = require('../utils/search');
 const aStar = require('../utils/paths/AStar');
 const Vertex = require('../utils/paths/Vertex');
+const {optimizePath} = require('../utils/optimizePath');
 const {mergeToAdjacencyList, normalizePath} = require('../utils/paths');
 
 const findPath = async function (req, res, next) {
     const {from: fromId, to: toId} = req.query;
     const from = await PathVertex.findOne({where: {ObjectId: fromId}});
     const to = await PathVertex.findOne({where: {ObjectId: toId}});
+    let vertices, edges;
     if (from && to) {
         if (from.LocationId === to.LocationId) {
-            const vertices = await PathVertex.findAll({
+            vertices = await PathVertex.findAll({
                 where: {LocationId: from.LocationId}
             });
             const ids = vertices.map(v => v.id);
-            const edges = await PathEdge.getEdgesBetween(ids);
-            const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
-            const path = aStar(graph, from.id, to.id);
-            if (path) {
-                res.json(normalizePath(path));
-            } else {
-                const error = new Error('Путь не найден');
-                error.status = 404;
-                next(error);
-            }
+            edges = await PathEdge.getEdgesBetween(ids);
         } else {
             const locations = await Location.findAll({where: {id: {[Op.or]: [from.LocationId, to.LocationId]}}});
             if (locations[0].BuildingId === locations[1].BuildingId) {
@@ -34,20 +27,11 @@ const findPath = async function (req, res, next) {
                         BuildingId: locations[0].BuildingId
                     }
                 });
-                const vertices = await PathVertex.findAll({
+                vertices = await PathVertex.findAll({
                     where: {LocationId: {[Op.in]: floors.map(f => f.id)}}
                 });
                 const ids = vertices.map(v => v.id);
-                const edges = await PathEdge.getEdgesBetween(ids);
-                const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
-                const path = aStar(graph, from.id, to.id);
-                if (path) {
-                    res.json(normalizePath(path));
-                } else {
-                    const error = new Error('Путь не найден');
-                    error.status = 404;
-                    next(error);
-                }
+                edges = await PathEdge.getEdgesBetween(ids);
             } else {
 
                 if (locations[0].BuildingId !== null && locations[1].BuildingId !== null) {
@@ -67,29 +51,28 @@ const findPath = async function (req, res, next) {
                             ]
                         }
                     });
-                    const vertices = await PathVertex.findAll({
+                    vertices = await PathVertex.findAll({
                         where: {
                             LocationId: {
                                 [Op.in]: pathLocations.map(l => l.id)
                             }
                         }
                     });
-                    const edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
-                    const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
-                    const path = aStar(graph, from.id, to.id);
-                    if (path) {
-                        res.json(normalizePath(path));
-                    } else {
-                        const error = new Error('Путь не найден');
-                        error.status = 404;
-                        next(error);
-                    }
+                    edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
                 } else {
                     // Route from or to root location
 
                 }
             }
-
+        }
+        const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
+        const path = aStar(graph, from.id, to.id);
+        if (path) {
+            res.json(optimizePath(normalizePath(path)));
+        } else {
+            const error = new Error('Путь не найден');
+            error.status = 404;
+            next(error);
         }
     } else {
         let message;
