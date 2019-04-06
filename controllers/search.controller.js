@@ -15,14 +15,7 @@ const findPath = async function (req, res, next) {
                 where: {LocationId: from.LocationId}
             });
             const ids = vertices.map(v => v.id);
-            const edges = await PathEdge.findAll({
-                where: {
-                    [Op.or]: [
-                        {StartId: {[Op.in]: ids}},
-                        {EndId: {[Op.in]: ids}},
-                    ]
-                },
-            });
+            const edges = await PathEdge.getEdgesBetween(ids);
             const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
             const path = aStar(graph, from.id, to.id);
             if (path) {
@@ -45,14 +38,7 @@ const findPath = async function (req, res, next) {
                     where: {LocationId: {[Op.in]: floors.map(f => f.id)}}
                 });
                 const ids = vertices.map(v => v.id);
-                const edges = await PathEdge.findAll({
-                    where: {
-                        [Op.or]: [
-                            {StartId: {[Op.in]: ids}},
-                            {EndId: {[Op.in]: ids}},
-                        ]
-                    },
-                });
+                const edges = await PathEdge.getEdgesBetween(ids);
                 const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
                 const path = aStar(graph, from.id, to.id);
                 if (path) {
@@ -62,8 +48,48 @@ const findPath = async function (req, res, next) {
                     error.status = 404;
                     next(error);
                 }
+            } else {
+
+                if (locations[0].BuildingId !== null && locations[1].BuildingId !== null) {
+                    // Route between two buildings
+                    const pathLocations = await Location.findAll({
+                        attributes: ['id', 'BuildingId'],
+                        where: {
+                            [Op.or]: [
+                                {
+                                    floor: {[Op.lte]: locations[1].floor},
+                                    BuildingId: locations[1].BuildingId
+                                },
+                                {
+                                    floor: {[Op.lte]: locations[0].floor},
+                                    BuildingId: locations[0].BuildingId
+                                }
+                            ]
+                        }
+                    });
+                    const vertices = await PathVertex.findAll({
+                        where: {
+                            LocationId: {
+                                [Op.in]: pathLocations.map(l => l.id)
+                            }
+                        }
+                    });
+                    const edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
+                    const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
+                    const path = aStar(graph, from.id, to.id);
+                    if (path) {
+                        res.json(normalizePath(path));
+                    } else {
+                        const error = new Error('Путь не найден');
+                        error.status = 404;
+                        next(error);
+                    }
+                } else {
+                    // Route from or to root location
+
+                }
             }
-            // TODO: implement path finding for case when buildings are different
+
         }
     } else {
         let message;
