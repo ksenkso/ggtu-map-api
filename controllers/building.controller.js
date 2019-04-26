@@ -95,3 +95,21 @@ const getTransitions = async function(req, res, next) {
 
 };
 module.exports.getTransitions = getTransitions;
+
+const floors = async function (req, res, next) {
+    const {id, floor} = req.params;
+    const location = await Location.findOne({
+        where: {
+            BuildingId: id,
+            floor
+        }
+    });
+    if (location) {
+        return res.json(location.toJSON());
+    } else {
+        const error = new Error('Этаж не найден');
+        error.status = 404;
+        next(error);
+    }
+};
+module.exports.floors = floors;

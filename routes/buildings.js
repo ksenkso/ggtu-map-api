@@ -43,7 +43,7 @@ module.exports = (router) => {
         querying.enableLimits,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         BuildingController.get
@@ -52,10 +52,10 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
-        access.createFilter({modelClass: null, check() {return true}}),
+        access.createFilter({modelClass: null, check() {return true;}}),
         BuildingController.getTransitions
     );
-    router.get('/buildings/:id/locations',
+    router.get('/buildings/:id/floors',
         auth,
         querying.enableRelations,
         querying.enableLimits,
@@ -68,7 +68,7 @@ module.exports = (router) => {
         querying.enableLimits,
         access.createFilter({
             check() {
-                return true
+                return true;
             }
         }),
         BuildingController.update
@@ -79,5 +79,11 @@ module.exports = (router) => {
         querying.enableLimits,
         access.createFilter(),
         BuildingController.remove
+    );
+    router.get(
+        '/buildings/:id/floors/:floor',
+        auth,
+        access.createFilter(),
+        BuildingController.floors
     );
 };
