@@ -3,7 +3,7 @@ const Vertex = require('./Vertex.js');
 /**
  *
  * @param v
- * @return {Vertex[]}
+ * @return {PathVertex[]}
  */
 function getPath(v) {
     const path = [];
@@ -17,14 +17,28 @@ function getPath(v) {
 
 /**
  *
- * @param {Vertex[]} graph
+ * @param {AdjacencyList} vertices
+ */
+function initGraph(vertices) {
+    vertices.forEach(vertex => {
+        vertex.parent = null;
+        vertex.reachCost = Infinity;
+        vertex.totalCost = Infinity;
+        vertex.isClosed = false;
+    });
+}
+
+/**
+ *
+ * @param {AdjacencyList} vertices
  * @param {string} startId
  * @param {string} endId
- * @return {Vertex[]|boolean}
+ * @return {PathVertex[] | boolean}
  */
-module.exports = function aStar(graph, startId, endId) {
-    const start = graph.find(node => node.id === startId);
-    const end = graph.find(node => node.id === endId);
+module.exports = function aStar(vertices, startId, endId) {
+    initGraph(vertices);
+    const start = vertices.find(node => node.id === startId);
+    const end = vertices.find(node => node.id === endId);
     start.reachCost = 0;
     start.totalCost = Vertex.distance(start, end);
     const open = [start];
@@ -36,7 +50,7 @@ module.exports = function aStar(graph, startId, endId) {
         }
         open.splice(open.indexOf(current), 1);
         current.isClosed = true;
-        const siblings = current.siblings.map(s => graph[s.index]).filter(s => !s.isClosed);
+        const siblings = current.siblings.map(s => vertices[s.index]).filter(s => !s.isClosed);
         for (let sibling of siblings) {
             const tempG = current.reachCost + Vertex.distance(current, sibling);
             if (!open.includes(sibling) || tempG < sibling.reachCost) {

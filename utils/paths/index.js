@@ -61,7 +61,8 @@ function mergeToAdjacencyList(vertices, edges) {
             Object: vertex[vertex.type],
             type: vertex.type,
             siblings: [],
-            id: vertex.id
+            id: vertex.id,
+            LocationId: vertex.LocationId
         };
         edges.forEach(edge => {
             const connection = edge.StartId === vertex.id ? 'EndId' : edge.EndId === vertex.id ? 'StartId' : null;
@@ -83,7 +84,7 @@ module.exports.mergeToAdjacencyList = mergeToAdjacencyList;
 
 /**
  *
- * @param {Vertex[]} path
+ * @param {PathVertex[]} path
  */
 function normalizePath(path) {
     return path.map(v => ({id: v.id, position: v.position}));
