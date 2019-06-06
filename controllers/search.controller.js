@@ -1,13 +1,106 @@
-const {Building, Place, Location, PlaceProps, PathVertex, PathEdge, sequelize} = require('../models');
+const {Building, Place, Location, PlaceProps, PathVertex, PathEdge, TransitionView, MapObject, Transition, sequelize} = require('../models');
 const {Op} = require('sequelize');
 const parse = require('../utils/search');
 const aStar = require('../utils/paths/AStar');
-const Vertex = require('../utils/paths/Vertex');
-const {optimizePath} = require('../utils/optimizePath');
-const {mergeToAdjacencyList, normalizePath} = require('../utils/paths');
+const {optimizePath} = require('../utils/paths/optimizePath');
+const {mergeToAdjacencyList} = require('../utils/paths');
+
+const findPathByIds = async function (req, res, next) {
+    try {
+        const path = await getPath(req.query.fromId, req.query.toId);
+        return res.json(path);
+    } catch (e) {
+        next(e);
+    }
+};
+module.exports.findPathByIds = findPathByIds;
 
 const findPath = async function (req, res, next) {
-    const {from: fromId, to: toId} = req.query;
+    const fromName = req.query.from;
+    const toName = req.query.to;
+    let fromObject, toObject;
+    try {
+        const from = await performSearch(fromName);
+        const to = await performSearch(toName);
+        fromObject = await getResultMapObject(from[0]);
+        toObject = await getResultMapObject(to[0]);
+    } catch (e) {
+        return next(e);
+    }
+    if (!fromObject || !toObject) {
+        const error = new Error('Места не найдены');
+        error.status = 404;
+        return next(error);
+    }
+    try {
+        const path = await getPath(fromObject.id, toObject.id);
+        if (path) {
+            return res.json(path);
+        } else {
+            return res.json([]);
+        }
+    } catch (e) {
+        next(e);
+    }
+};
+module.exports.findPath = findPath;
+
+const find = async function (req, res, next) {
+    try {
+        const input = req.query.q;
+        const results = await performSearch(input);
+        if (results.length) {
+            res.json(results);
+        } else {
+            const error = new Error('Место не найдено');
+            error.status = 404;
+            return next(error);
+        }
+    } catch (e) {
+        return next(e);
+    }
+};
+module.exports.find = find;
+
+/**
+ *
+ * @param {Object} result
+ * @return {Promise<MapObject>}
+ */
+async function getResultMapObject(result) {
+    if (result.place) {
+        return await MapObject.findOne({where: {PlaceId: result.place.id}});
+    } else {
+        if (result.location) {
+            const view = await TransitionView.findOne({
+                where: {LocationId: result.location.id},
+                include: [{model: MapObject}]
+            });
+            if (view) {
+                return view.MapObject;
+            }
+        } else if (result.building) {
+            const entrance = await TransitionView.findOne({
+                include: [
+                    {model: Transition, where: {type: 'exit', BuildingId: result.building.id}},
+                    {model: MapObject}
+                ],
+                // attributes: ['id']
+            });
+            if (entrance) {
+                return entrance.MapObject;
+            }
+        }
+    }
+}
+
+/**
+ *
+ * @param {Number} fromId
+ * @param {Number} toId
+ * @return {Promise<PathVertex[]|void>}
+ */
+async function getPath(fromId, toId) {
     const from = await PathVertex.findOne({where: {ObjectId: fromId}});
     const to = await PathVertex.findOne({where: {ObjectId: toId}});
     let vertices, edges;
@@ -16,8 +109,6 @@ const findPath = async function (req, res, next) {
             vertices = await PathVertex.findAll({
                 where: {LocationId: from.LocationId}
             });
-            const ids = vertices.map(v => v.id);
-            edges = await PathEdge.getEdgesBetween(ids);
         } else {
             const locations = await Location.findAll({where: {id: {[Op.or]: [from.LocationId, to.LocationId]}}});
             if (locations[0].BuildingId === locations[1].BuildingId) {
@@ -30,65 +121,54 @@ const findPath = async function (req, res, next) {
                 vertices = await PathVertex.findAll({
                     where: {LocationId: {[Op.in]: floors.map(f => f.id)}}
                 });
-                const ids = vertices.map(v => v.id);
-                edges = await PathEdge.getEdgesBetween(ids);
             } else {
-
-                if (locations[0].BuildingId !== null && locations[1].BuildingId !== null) {
-                    // Route between two buildings
-                    const pathLocations = await Location.findAll({
-                        attributes: ['id', 'BuildingId'],
-                        where: {
-                            [Op.or]: [
-                                {
-                                    floor: {[Op.lte]: locations[1].floor},
-                                    BuildingId: locations[1].BuildingId
-                                },
-                                {
-                                    floor: {[Op.lte]: locations[0].floor},
-                                    BuildingId: locations[0].BuildingId
-                                }
-                            ]
-                        }
-                    });
-                    vertices = await PathVertex.findAll({
-                        where: {
-                            LocationId: {
-                                [Op.in]: pathLocations.map(l => l.id)
+                const pathLocations = await Location.findAll({
+                    attributes: ['id', 'BuildingId'],
+                    where: {
+                        [Op.or]: [
+                            {
+                                floor: {[Op.lte]: locations[1].floor},
+                                BuildingId: locations[1].BuildingId
+                            },
+                            {
+                                floor: {[Op.lte]: locations[0].floor},
+                                BuildingId: locations[0].BuildingId
+                            },
+                            {
+                                BuildingId: null
                             }
+                        ]
+                    }
+                });
+                vertices = await PathVertex.findAll({
+                    where: {
+                        LocationId: {
+                            [Op.in]: pathLocations.map(l => l.id)
                         }
-                    });
-                    edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
-                } else {
-                    // Route from or to root location
-
-                }
+                    }
+                });
             }
         }
-        const graph = mergeToAdjacencyList(vertices, edges).map(node => new Vertex(node));
+        edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
+        const graph = mergeToAdjacencyList(vertices, edges);
         const path = aStar(graph, from.id, to.id);
         if (path) {
-            res.json(optimizePath(normalizePath(path)));
+            return optimizePath(path);
         } else {
             const error = new Error('Путь не найден');
             error.status = 404;
-            next(error);
+            throw error;
         }
-    } else {
-        let message;
-        if (!from) {
-            message = 'Места с таким fromId не существует';
-        } else {
-            message = 'Места с таким toId не существует';
-        }
-        const error = new Error(message);
-        error.status = 404;
-        next(error);
     }
+}
 
-};
-module.exports.findPath = findPath;
-
+/**
+ *
+ * @param {Place} item
+ * @param {Location} location
+ * @param {Building} building
+ * @return {Promise<{location: Location, place: Place, building: Building}[]>}
+ */
 async function findPlacesInContext(item, {location, building} = {}) {
     // Find places in specified location
     // Places are searched by name with LIKE clause or levenshtein function call
@@ -127,6 +207,15 @@ async function findPlacesInContext(item, {location, building} = {}) {
                     }
                 };
             }
+            break;
+        }
+        default: {
+            config.attributes = {include: [[sequelize.fn('levenshtein', item.name, sequelize.col('Place.name')), 'distance']]};
+            config.having = {
+                distance: {
+                    [Op.lt]: 3
+                }
+            };
         }
     }
     /*if (item.number) {
@@ -200,97 +289,95 @@ async function findPlacesInContext(item, {location, building} = {}) {
 
 }
 
-const find = async function (req, res, next) {
-    try {
-        const input = req.query.q;
-        console.log(input);
-        const parsed = parse(input);
-        const address = {};
-        parsed.forEach(item => {
-            address[item.type] = item;
+/**
+ *
+ * @param input
+ * @return {Promise<Array>}
+ */
+async function performSearch(input) {
+    const parsed = parse(input);
+    const address = {};
+    parsed.forEach(item => {
+        address[item.type] = item;
+    });
+    if (parsed.length === 1 && parsed[0].type === 'shortAddress') {
+        const building = await Building.find({
+            where: {
+                type: parsed[0].building.buildingType,
+                name: {[Op.like]: `%${+parsed[0].building.number}%`}
+            }
         });
-        if (parsed.length === 1 && parsed[0].type === 'shortAddress') {
-            const building = await Building.find({
+        if (building) {
+            const cabinet = await Place.find({
                 where: {
-                    type: parsed[0].building.buildingType,
-                    name: {[Op.like]: `%${+parsed[0].building.number}%`}
+                    type: 'cabinet',
+                    name: {[Op.like]: `%${+parsed[0].cabinet.number}%`},
+                },
+                include: [{model: Location, where: {BuildingId: building.id}}]
+            });
+            if (cabinet) {
+                console.log(cabinet);
+                const place = cabinet.toJSON();
+                const location = cabinet.Location;
+                delete place.Location;
+                return [{place, location, building: building.toJSON()}];
+            } else {
+                const error = new Error('Кабинет не найден');
+                error.status = 404;
+                throw error;
+            }
+        } else {
+            const error = new Error('Корпус не найден');
+            error.status = 404;
+            throw error;
+        }
+    } else {
+        // Handle other cases
+        const results = [];
+        const response = {};
+        if (address.building) {
+            const building = await Building.findOne({
+                where: {
+                    type: address.building.buildingType,
+                    name: {[Op.like]: `%${address.building.number}%`}
                 }
             });
             if (building) {
-                const cabinet = await Place.find({
-                    where: {
-                        type: 'cabinet',
-                        name: {[Op.like]: `%${+parsed[0].cabinet.number}%`},
-                    },
-                    include: [{model: Location, where: {BuildingId: building.id}}]
-                });
-                if (cabinet) {
-                    console.log(cabinet);
-                    const place = cabinet.toJSON();
-                    const location = cabinet.Location;
-                    delete place.Location;
-                    return res.json([{place, location, building: building.toJSON()}]);
-                } else {
-                    const error = new Error('Кабинет не найден');
-                    error.status = 404;
-                    next(error);
-                }
+                response.building = building.toJSON();
             } else {
-                const error = new Error('Корпус не найден');
-                error.status = 404;
-                next(error);
+                console.log('no building');
             }
-        } else {
-            // Handle other cases
-            const results = [];
-            const response = {};
-            if (address.building) {
-                const building = await Building.findOne({
-                    where: {
-                        type: address.building.buildingType,
-                        name: {[Op.like]: `%${address.building.number}%`}
-                    }
-                });
-                if (building) {
-                    response.building = building.toJSON();
-                } else {
-                    console.log('no building');
-                }
-            }
-            if (address.location) {
-                const config = {
-                    where: {
-                        floor: address.location.floor
-                    }
-                };
-                if (response.building) {
-                    config.where.BuildingId = response.building.id;
-                }
-                const location = await Location.findOne(config);
-                if (location) {
-                    response.location = location.toJSON();
-                }
-            }
-            if (address.place) {
-                let result = await findPlacesInContext(address.place, {
-                    location: response.location,
-                    building: response.building
-                });
-                if (!result.length) {
-                    result = await findPlacesInContext(address.place, {building: response.building});
-                    if (!result.length) {
-                        result = await findPlacesInContext(address.place);
-                    }
-                }
-                return res.json(result);
-            } else {
-                results.push(response);
-            }
-            return res.json(results);
         }
-        return res.status(204);
-    } catch (e) {
-        return next(e);
+        if (address.location) {
+            const config = {
+                where: {
+                    floor: address.location.floor
+                }
+            };
+            if (response.building) {
+                config.where.BuildingId = response.building.id;
+            }
+            const location = await Location.findOne(config);
+            if (location) {
+                response.location = location.toJSON();
+            }
+        }
+        if (address.place) {
+            let result = await findPlacesInContext(address.place, {
+                location: response.location,
+                building: response.building
+            });
+            if (!result.length) {
+                result = await findPlacesInContext(address.place, {building: response.building});
+                if (!result.length) {
+                    result = await findPlacesInContext(address.place);
+                }
+            }
+            return result;
+        } else {
+            results.push(response);
+        }
+        return results;
     }
-};
-module.exports.find = find;
+}
+
