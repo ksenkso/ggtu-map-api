@@ -2,7 +2,7 @@ const {Building, Place, Location, PlaceProps, PathVertex, PathEdge, TransitionVi
 const {Op} = require('sequelize');
 const parse = require('../utils/search');
 const aStar = require('../utils/paths/AStar');
-const {optimizePath} = require('../utils/paths/optimizePath');
+const {groupAndDescribePath} = require('../utils/paths/groupAndDescribePath');
 const {mergeToAdjacencyList} = require('../utils/paths');
 
 const findPathByIds = async function (req, res, next) {
@@ -103,7 +103,7 @@ async function getResultMapObject(result) {
 async function getPath(fromId, toId) {
     const from = await PathVertex.findOne({where: {ObjectId: fromId}});
     const to = await PathVertex.findOne({where: {ObjectId: toId}});
-    let vertices, edges;
+    let vertices, edges, pathLocations;
     if (from && to) {
         if (from.LocationId === to.LocationId) {
             vertices = await PathVertex.findAll({
@@ -112,18 +112,18 @@ async function getPath(fromId, toId) {
         } else {
             const locations = await Location.findAll({where: {id: {[Op.or]: [from.LocationId, to.LocationId]}}});
             if (locations[0].BuildingId === locations[1].BuildingId) {
-                const floors = await Location.findAll({
+                pathLocations = await Location.findAll({
                     where: {
                         floor: {[Op.between]: [locations[0].floor, locations[1].floor].sort()},
                         BuildingId: locations[0].BuildingId
                     }
                 });
                 vertices = await PathVertex.findAll({
-                    where: {LocationId: {[Op.in]: floors.map(f => f.id)}}
+                    where: {LocationId: {[Op.in]: pathLocations.map(f => f.id)}}
                 });
             } else {
-                const pathLocations = await Location.findAll({
-                    attributes: ['id', 'BuildingId'],
+                pathLocations = await Location.findAll({
+                    attributes: ['id', 'BuildingId', 'name'],
                     where: {
                         [Op.or]: [
                             {
@@ -138,6 +138,10 @@ async function getPath(fromId, toId) {
                                 BuildingId: null
                             }
                         ]
+                    },
+                    include: {
+                        model: Building,
+                        attributes: ['name']
                     }
                 });
                 vertices = await PathVertex.findAll({
@@ -153,7 +157,7 @@ async function getPath(fromId, toId) {
         const graph = mergeToAdjacencyList(vertices, edges);
         const path = aStar(graph, from.id, to.id);
         if (path) {
-            return optimizePath(path);
+            return groupAndDescribePath(path, pathLocations);
         } else {
             const error = new Error('Путь не найден');
             error.status = 404;
