@@ -46,31 +46,28 @@ function groupAndDescribePath(path, locations = [], MAX_ANGLE = Math.PI / 18) {
             }
             const prevVertex = groups[groups.length - 1];
             if (prevVertex.LocationId !== vertex.LocationId) {
-                prevVertex.direction = 'Переход';
-                vertex.direction = 'Прямо';
+                prevVertex.direction = null;
+                vertex.direction = null;
                 if (
                     locations[vertex.LocationId].Building
                     && locations[prevVertex.LocationId].Building
                     && locations[vertex.LocationId].Building.id === locations[prevVertex.LocationId].Building.id
                 ) {
-                    prevVertex.direction = 'Лестница';
-                    prevVertex.description = locations[vertex.LocationId].name;
-                    vertex.direction = 'Лестница';
-                    vertex.description = locations[prevVertex.LocationId].name;
+
+                    groups[groups.length-2].description = 'К лестнице на ' + locations[vertex.LocationId].name;
                 }
                 if (!locations[vertex.LocationId].Building) {
                     // if current vertex is in the root location, then check the previous one:
                     // if it is inside a building, then this vertex is an exit, else do nothing
                     if (locations[prevVertex.LocationId].Building) {
-                        prevVertex.direction = 'Выход';
-                        prevVertex.type = 'entrance';
-                        prevVertex.description = locations[vertex.LocationId].name;
+                        // prevVertex.type = 'entrance';
+                        // prevVertex.description = locations[vertex.LocationId].name;
+                        groups[groups.length - 2].description = 'К выходу';
                     }
                 } else {
                     // check previous vertex: if it is in the root location, the that vertex is an entrance
                     if (!locations[prevVertex.LocationId].Building) {
-                        prevVertex.direction = 'Вход';
-                        prevVertex.description = locations[vertex.LocationId].Building.name;
+                        groups[groups.length - 2].description = 'Ко входу в ' + locations[vertex.LocationId].Building.name;
                     }
                 }
             }
