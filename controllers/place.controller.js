@@ -71,6 +71,8 @@ const update = async function (req, res, next) {
                 }));
                 output.props = PlaceProps.prepareProps(props);
                 delete output.Props;
+            } else {
+                output.props = {};
             }
         }
         return res.json(output);
