@@ -14,7 +14,10 @@ async function getLocationGraph(LocationId) {
             include: [{
                 association: MapObject.Place,
                 attributes: ['name', 'type', 'container']
-            }, {association: MapObject.TransitionView, attributes: ['container', 'TransitionId']}]
+            }, {
+                association: MapObject.TransitionView,
+                attributes: ['container', 'TransitionId']
+            }]
         },
         attributes: ['id', 'x', 'y', 'z']
     });
@@ -89,4 +92,5 @@ module.exports.mergeToAdjacencyList = mergeToAdjacencyList;
 function normalizePath(path) {
     return path.map(v => ({id: v.id, position: v.position}));
 }
+
 module.exports.normalizePath = normalizePath;
