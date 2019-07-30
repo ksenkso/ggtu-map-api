@@ -6,10 +6,10 @@ const basename  = path.basename(__filename);
 const db        = {};
 const CONFIG = require('../config/config');
 
-const sequelize = new Sequelize(CONFIG.db_name, CONFIG.db_user, CONFIG.db_password, {
-    host: CONFIG.db_host,
-    dialect: CONFIG.db_dialect,
-    port: CONFIG.db_port,
+const sequelize = new Sequelize(CONFIG.db.name, CONFIG.db.user, CONFIG.db.password, {
+    host: CONFIG.db.host,
+    dialect: CONFIG.db.dialect,
+    port: CONFIG.db.port,
     operatorsAliases: false
 });
 
