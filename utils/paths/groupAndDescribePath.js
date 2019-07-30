@@ -1,17 +1,20 @@
+const {maps} = require('../../config');
+
 /**
  *
  * @param {PathVertex[]} path
  * @param {Location[]} locations
  * @param {number} MAX_ANGLE
- * @return {PathVertex[]}
+ * @return {{distance: number, time: number, vertices: PathVertex[]}}
  */
 function groupAndDescribePath(path, locations = [], MAX_ANGLE = Math.PI / 18) {
+    let distance = 0;
     let curVector = {
         x: path[1].position.x - path[0].position.x,
         y: path[0].position.y - path[1].position.y, // flip y coordinate because on the map it goes down
         z: path[1].position.z - path[0].position.z,
     };
-    const groups = [cleanVertex(path[0])];
+    const vertices = [cleanVertex(path[0])];
     if (locations.length) {
         locations = locations.reduce((acc, floor) => {
             acc[floor.id] = floor;
@@ -44,7 +47,7 @@ function groupAndDescribePath(path, locations = [], MAX_ANGLE = Math.PI / 18) {
                     vertex.direction = 'Развернуться направо'
                 }
             }
-            const prevVertex = groups[groups.length - 1];
+            const prevVertex = vertices[vertices.length - 1];
             if (prevVertex.LocationId !== vertex.LocationId) {
                 prevVertex.direction = null;
                 vertex.direction = null;
@@ -54,7 +57,7 @@ function groupAndDescribePath(path, locations = [], MAX_ANGLE = Math.PI / 18) {
                     && locations[vertex.LocationId].Building.id === locations[prevVertex.LocationId].Building.id
                 ) {
 
-                    groups[groups.length-2].description = 'К лестнице на ' + locations[vertex.LocationId].name;
+                    vertices[vertices.length - 2].description = 'К лестнице на ' + locations[vertex.LocationId].name;
                 }
                 if (!locations[vertex.LocationId].Building) {
                     // if current vertex is in the root location, then check the previous one:
@@ -62,21 +65,32 @@ function groupAndDescribePath(path, locations = [], MAX_ANGLE = Math.PI / 18) {
                     if (locations[prevVertex.LocationId].Building) {
                         // prevVertex.type = 'entrance';
                         // prevVertex.description = locations[vertex.LocationId].name;
-                        groups[groups.length - 2].description = 'К выходу';
+                        vertices[vertices.length - 2].description = 'К выходу';
                     }
                 } else {
                     // check previous vertex: if it is in the root location, the that vertex is an entrance
                     if (!locations[prevVertex.LocationId].Building) {
-                        groups[groups.length - 2].description = 'Ко входу в ' + locations[vertex.LocationId].Building.name;
+                        vertices[vertices.length - 2].description = 'Ко входу в ' + locations[vertex.LocationId].Building.name;
                     }
                 }
             }
-            groups.push(vertex);
+            vertices.push(vertex);
+            vertex.distance = Math.hypot(
+                vertex.position.x - prevVertex.position.x,
+                vertex.position.y - prevVertex.position.y,
+                vertex.position.z - prevVertex.position.z
+            );
+            distance += vertex.distance;
         }
         curVector = tempVector;
     }
-    groups.push(cleanVertex(path[path.length - 1]));
-    return groups;
+    vertices.push(cleanVertex(path[path.length - 1]));
+    const time = distance / maps.routes.velocity | 0;
+    return {
+        distance: distance | 0,
+        time,
+        vertices,
+    };
 }
 
 module.exports.groupAndDescribePath = groupAndDescribePath;

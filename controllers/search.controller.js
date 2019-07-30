@@ -106,12 +106,14 @@ async function getPath(fromId, toId) {
     let vertices, edges, pathLocations;
     if (from && to) {
         if (from.LocationId === to.LocationId) {
+            // places are in the same location
             vertices = await PathVertex.findAll({
                 where: {LocationId: from.LocationId}
             });
         } else {
             const locations = await Location.findAll({where: {id: {[Op.or]: [from.LocationId, to.LocationId]}}});
             if (locations[0].BuildingId === locations[1].BuildingId) {
+                // places are in the same building
                 pathLocations = await Location.findAll({
                     where: {
                         floor: {[Op.between]: [locations[0].floor, locations[1].floor].sort()},
@@ -122,6 +124,9 @@ async function getPath(fromId, toId) {
                     where: {LocationId: {[Op.in]: pathLocations.map(f => f.id)}}
                 });
             } else {
+                // the most common situation
+                // path locations = all locations that should be visited
+                // between first and last locations including them
                 pathLocations = await Location.findAll({
                     attributes: ['id', 'BuildingId', 'name'],
                     where: {
@@ -144,6 +149,7 @@ async function getPath(fromId, toId) {
                         attributes: ['name']
                     }
                 });
+                // vertices = all vertices in found locations
                 vertices = await PathVertex.findAll({
                     where: {
                         LocationId: {
@@ -154,9 +160,10 @@ async function getPath(fromId, toId) {
             }
         }
         edges = await PathEdge.getEdgesBetween(vertices.map(v => v.id));
-        const graph = mergeToAdjacencyList(vertices, edges);
-        const path = aStar(graph, from.id, to.id);
+        const graph = mergeToAdjacencyList(vertices, edges); //create a graph to search in
+        const path = aStar(graph, from.id, to.id); // use A* to find the path
         if (path) {
+            // shrink the path to only valuable segments and add additional information to vertices
             return groupAndDescribePath(path, pathLocations);
         } else {
             const error = new Error('Путь не найден');

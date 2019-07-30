@@ -3,7 +3,7 @@ const authService = require('../services/auth.service');
 const {ReS, handleError} = require('../services/util.service');
 const pe = require('parse-error');
 const {User} = require('../models');
-const CONFIG = require('../config/config');
+const CONFIG = require('../config');
 // const debug = require('debug')('Auth');
 /**
  *

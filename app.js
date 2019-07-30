@@ -9,7 +9,7 @@ const path = require('path');
 const v1 = require('./routes/v1');
 const app = express();
 
-const CONFIG = require('./config/config');
+const CONFIG = require('./config');
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
