@@ -312,14 +312,14 @@ async function performSearch(input) {
         address[item.type] = item;
     });
     if (parsed.length === 1 && parsed[0].type === 'shortAddress') {
-        const building = await Building.find({
+        const building = await Building.findOne({
             where: {
                 type: parsed[0].building.buildingType,
                 name: {[Op.like]: `%${+parsed[0].building.number}%`}
             }
         });
         if (building) {
-            const cabinet = await Place.find({
+            const cabinet = await Place.findOne({
                 where: {
                     type: 'cabinet',
                     name: {[Op.like]: `%${+parsed[0].cabinet.number}%`},
