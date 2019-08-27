@@ -42,6 +42,27 @@ const get = async function (req, res) {
     return ReS(res, transition.toJSON());
 };
 module.exports.get = get;
+/**
+ * Get travel locations of a given transition
+ * @param req
+ * @param res
+ * @param next
+ * @return {Promise<*>}
+ */
+const getLocations = async function (req, res, next) {
+    try {
+        const locations = await req.transition.getLocations();
+        if (locations && locations.length) {
+            return res.json(locations);
+        } else {
+            return res.json([])
+        }
+
+    } catch (e) {
+        return next(e)
+    }
+};
+module.exports.getLocations = getLocations;
 
 const update = async function (req, res, next) {
     try {
