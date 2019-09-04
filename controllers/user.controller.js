@@ -48,7 +48,7 @@ const tokenInfo = async function (req, res, next) {
     if (token) {
         try {
             const info = await new Promise((resolve, reject) => {
-                jwt.verify(token, CONFIG.jwt_encryption, (error, decoded) => {
+                jwt.verify(token, CONFIG.jwt.encryption, (error, decoded) => {
                     if (decoded) {
                         resolve(decoded);
                     } else {
@@ -148,7 +148,7 @@ const checkAuth = async function (req, res, next) {
      * 3. Check if token contains valid user id
      */
     try {
-        const decoded = jwt.verify(req.query.token, CONFIG.jwt_encryption);
+        const decoded = jwt.verify(req.query.token, CONFIG.jwt.encryption);
         if (decoded) {
             const ok = !!await User.count({where: {id: decoded.user_id}});
             console.log(ok);

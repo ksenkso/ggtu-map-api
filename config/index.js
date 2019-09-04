@@ -1,10 +1,10 @@
 require('dotenv').config();
 
-const Index = {};
+const CONFIG = {};
 
-Index.app = process.env.APP || 'dev';
-Index.port = process.env.PORT || '3000';
-Index.db = {
+CONFIG.app = process.env.APP || 'dev';
+CONFIG.port = process.env.PORT || '3000';
+CONFIG.db = {
     dialect: process.env.DB_DIALECT || 'mysql',
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || '3306',
@@ -13,16 +13,16 @@ Index.db = {
     password: process.env.DB_PASSWORD || '',
 };
 
-Index.jwt = {
+CONFIG.jwt = {
     encryption: process.env.JWT_ENCRYPTION || 'jwt_please_change',
     expiration: process.env.JWT_EXPIRATION || '1d',
 };
 
 // Application settings
 // Map routes settings
-Index.maps = {
+CONFIG.maps = {
     routes: {
         velocity: 5000/3600, //5 km/h
     }
 };
-module.exports = Index;
+module.exports = CONFIG;
