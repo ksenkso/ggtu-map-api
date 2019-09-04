@@ -18,6 +18,12 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     Transition.defineStatic = (models) => {
+        Transition.prototype.getLocations = async function() {
+            const query = `select * from Locations where id in (
+            select LocationId from TransitionViews where TransitionId = ?
+            );`;
+            return sequelize.query(query, {model: models.Location, mapToModel: true, replacements: [this.id]})
+        };
         Transition.addHook('beforeDestroy', async (transition) => {
             debug('Fetching views...');
             const views = await transition.getViews({include: [{model: models.Location}]});

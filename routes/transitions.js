@@ -42,6 +42,18 @@ module.exports = (router) => {
         }),
         TransitionsController.get
     );
+    router.get(
+        '/transitions/:id/locations',
+        auth,
+        querying.enableRelations,
+        querying.enableLimits,
+        access.createFilter({
+            check() {
+                return true
+            }
+        }),
+        TransitionsController.getLocations
+    );
     router.patch(
         '/transitions/:id',
         auth,

@@ -9,7 +9,7 @@ module.exports = function (passport) {
 
     passport.use(new Strategy(opts, async function (jwt_payload, done) {
         try {
-            const user = await User.findById(jwt_payload.user_id);
+            const user = await User.findByPk(jwt_payload.user_id);
             if (user) {
                 return done(null, user);
             } else {

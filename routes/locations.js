@@ -6,7 +6,7 @@ const {
 } = require('../middleware');
 const AccessFilter = require('../middleware/AccessFilter');
 const {Location} = require('../models');
-
+const {cache, cacheSuccess} = require('../utils/cache');
 class LocationsFilter extends AccessFilter {
     constructor() {
         super({
@@ -40,6 +40,7 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
+        cache('5 minutes', cacheSuccess),
         LocationController.getAll
     );
     router.get(

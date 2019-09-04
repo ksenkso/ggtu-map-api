@@ -44,7 +44,7 @@ module.exports.authUser = authUser;
  */
 const checkToken = async function (token) {
     console.log(token);
-    const decoded = jwt.verify(token, CONFIG.jwt_encryption);
+    const decoded = jwt.verify(token, CONFIG.jwt.encryption);
     if (decoded) {
         if (decoded.user_id) {
             const user = await User.findOne({where: {id: decoded.user_id}});

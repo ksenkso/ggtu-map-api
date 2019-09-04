@@ -63,7 +63,7 @@ class AccessFilter {
                     // Else use includes from the config
                     queryConfig.include = queryConfig.include ? queryConfig.include : config.include;
                     debug('Querying model...');
-                    const model = await config.modelClass.findById(key, queryConfig);
+                    const model = await config.modelClass.findByPk(key, queryConfig);
                     debug(!!model ? 'Found' : 'Not found');
                     if (!model) {
                         debug('Throwing an error');
