@@ -29,6 +29,7 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
+        querying.enableWhere,
         BuildingController.getAll
     );
     router.post('/buildings',

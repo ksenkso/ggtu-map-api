@@ -74,6 +74,8 @@ const update = async function (req, res, next) {
             } else {
                 output.props = {};
             }
+        } else {
+            output.props = PlaceProps.prepareProps(await PlaceProps.findAll({where: {PlaceId: output.id}}));
         }
         return res.json(output);
     } catch (e) {

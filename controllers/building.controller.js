@@ -41,15 +41,15 @@ const create = async function (req, res, next) {
 module.exports.create = create;
 
 const getAll = async function(req, res, next) {
+    const include = [
+        {
+            model: Location,
+            attributes: ['id', 'name', 'map']
+        }
+    ];
+    const config = Object.assign({}, {include}, req.queryConfig);
     try {
-        const buildings = await Building.findAll({
-            include: [
-                {
-                    model: Location,
-                    attributes: ['id', 'name', 'map']
-                }
-            ]
-        });
+        const buildings = await Building.findAll(config);
         return ReS(res, buildings.map(b => b.toJSON()));
     } catch (e) {
         next(e);

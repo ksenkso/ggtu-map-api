@@ -33,6 +33,7 @@ module.exports = (router) => {
         auth,
         querying.enableRelations,
         querying.enableLimits,
+        querying.enableWhere,
         PlaceController.getAll,
     );
     router.get('/places/:id',
