@@ -1,5 +1,5 @@
 const ViewsController = require('../controllers/transition-views.controller');
-const {auth} = require('../middleware');
+const {auth, querying} = require('../middleware');
 const {TransitionView} = require('../models');
 const AccessFilter = require('../middleware/AccessFilter');
 class ViewsFilter extends AccessFilter {
@@ -27,8 +27,25 @@ module.exports = (router) => {
         ViewsController.create
     );
     router.get(
+        '/transition-views',
+        auth,
+        querying.enableLimits,
+        querying.enableRelations,
+        querying.enableWhere,
+        access.createFilter({
+            check() {
+                return true
+            },
+            modelClass: null
+        }),
+        ViewsController.getAll
+    );
+    router.get(
         '/transition-views/:id',
         auth,
+        querying.enableLimits,
+        querying.enableRelations,
+        querying.enableWhere,
         access.createFilter({
             check() {
                 return true

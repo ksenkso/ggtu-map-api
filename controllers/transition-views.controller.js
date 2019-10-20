@@ -60,3 +60,12 @@ const get = async function(req, res, next) {
     }
 };
 module.exports.get = get;
+
+const getAll = async function (req, res, next) {
+    try {
+        return res.json((await TransitionView.findAll(req.queryConfig)).map(v => v.toJSON()));
+    } catch (e) {
+        return next(e)
+    }
+};
+module.exports.getAll = getAll;
