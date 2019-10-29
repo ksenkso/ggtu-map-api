@@ -74,6 +74,16 @@ module.exports = (router) => {
         LocationController.getPlaces
     );
     router.get(
+        '/locations/:id/map',
+        auth,
+        access.createFilter({
+            check() {
+                return true;
+            }
+        }),
+        LocationController.getMap
+    );
+    router.get(
         '/locations/:id/objects',
         auth,
         querying.enableLimits,
@@ -116,7 +126,7 @@ module.exports = (router) => {
         auth,
         access.createFilter(),
         fileUpload(),
-        LocationController.upload
+        LocationController.uploadMap
     );
     router.delete(
         '/locations/:id',
