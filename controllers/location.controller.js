@@ -291,17 +291,6 @@ const updatePath = async function (req, res, next) {
 };
 module.exports.updatePath = updatePath;
 
-const getMap = async function (req, res, next) {
-    try {
-        const {x, y, zoom} = req.query;
-        const locationId = req.params.id;
-
-    } catch (e) {
-        return next(e)
-    }
-};
-module.exports.getMap = getMap;
-
 const uploadMap = async function (req, res, next) {
     try {
         if (!req.files || !req.files.map) {
@@ -311,11 +300,10 @@ const uploadMap = async function (req, res, next) {
             /**
              * 1. Check the resolution of the image
              * 2. Create tiles from the image:
-             *   2.1. Set `zoom` to 1
-             *   2.2. Go through the world matrix elements; for each
-             *   2.3. Create an in-memory image and save it (use the location id, x, y and zoom for file names)
-             *   2.4. Set `zoom` to 2
-             *   2.5. Create zoomed tiles with the same method
+             *   2.1. Go through the world matrix elements; for each
+             *   2.2. Create an in-memory image and save it (use the location id, x, y and zoom for file names)
+             *   2.3. Resize image side to 1/4 of its original length
+             *   2.4. Save resized image
              *
              */
             /**
@@ -326,8 +314,7 @@ const uploadMap = async function (req, res, next) {
                 .then(map => {
                     const {width, height} = map.bitmap;
                     if (width === 2048 && height === 2048) {
-                        let zoom = 1;
-                        let size = 256 * zoom;
+                        let size = 512;
                         const length = 2048 / size;
                         const tasks = [];
                         for (let i = 0; i < length; i++) {
@@ -337,23 +324,25 @@ const uploadMap = async function (req, res, next) {
                                     .then(image => {
                                         image
                                             .blit(map, 0, 0, i * size, j * size, size, size)
-                                            .write(`maps/${id}-${i}-${j}.jpg`);
+                                            .write(`maps/${id}-${i}-${j}-1.jpg`) // here the zoom is increased
+                                            .resize(size / 4, size / 4)
+                                            .write(`maps/${id}-${i}-${j}-4.jpg`);
                                     }));
                             }
                             tasks.push(r);
                         }
                         Promise.all(tasks.map(r => Promise.all(r)))
                             .then(() => {
-                                res.json({ok: true});
-                            })
+                                res.status(200).end();
+                            });
                     }
-                })
+                });
 
         } else {
             return next(new Error('Карта должна быть в формате JPEG или PNG'));
         }
     } catch (e) {
-        return next(e)
+        return next(e);
     }
 };
 module.exports.uploadMap = uploadMap;
