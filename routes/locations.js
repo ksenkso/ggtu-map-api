@@ -52,7 +52,7 @@ module.exports = (router) => {
     );
     router.get(
         '/locations/:id',
-        auth,
+        // auth,
         querying.enableRelations,
         querying.enableLimits,
         access.createFilter({

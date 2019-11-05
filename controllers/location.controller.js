@@ -37,7 +37,8 @@ const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
 const {Location, Place, Building, TransitionView, PathVertex, PathEdge} = require('../models');
 const {getLocationGraph} = require('../utils/paths');
-const jimp = require('jimp');
+const rimraf = require('rimraf');
+const sharp = require('sharp');
 
 const {Op} = require('sequelize');
 
@@ -298,46 +299,39 @@ const uploadMap = async function (req, res, next) {
         }
         if (req.files.map.mimetype === 'image/jpeg' || req.files.map.mimetype === 'image/png') {
             /**
-             * 1. Check the resolution of the image
-             * 2. Create tiles from the image:
-             *   2.1. Go through the world matrix elements; for each
-             *   2.2. Create an in-memory image and save it (use the location id, x, y and zoom for file names)
-             *   2.3. Resize image side to 1/4 of its original length
-             *   2.4. Save resized image
-             *
-             */
-            /**
              * @type {Number}
              */
             const {id} = req.location;
-            jimp.read(req.files.map.data)
-                .then(map => {
-                    const {width, height} = map.bitmap;
-                    if (width === 2048 && height === 2048) {
-                        let size = 512;
-                        const length = 2048 / size;
-                        const tasks = [];
-                        for (let i = 0; i < length; i++) {
-                            const r = [];
-                            for (let j = 0; j < length; j++) {
-                                r.push(jimp.read(size, size, 0xfff)
-                                    .then(image => {
-                                        image
-                                            .blit(map, 0, 0, i * size, j * size, size, size)
-                                            .write(`maps/${id}-${i}-${j}-1.jpg`) // here the zoom is increased
-                                            .resize(size / 4, size / 4)
-                                            .write(`maps/${id}-${i}-${j}-4.jpg`);
-                                    }));
-                            }
-                            tasks.push(r);
-                        }
-                        Promise.all(tasks.map(r => Promise.all(r)))
-                            .then(() => {
-                                res.status(200).end();
-                            });
-                    }
-                });
 
+            rimraf(path.join('maps', `${id}.bz_files`), (err) => {
+                if (err) {
+                    next(err);
+                } else {
+                    sharp(req.files.map.data)
+                        .jpeg({
+                            quality: 100
+                        })
+                        .tile({
+                            depth: 'onetile',
+                            size: 512
+                        })
+                        .toFile(path.join('maps', `${id}.bz`), (err) => {
+                            if (!err) {
+                                rimraf(path.join('maps',`${id}.bz_files`, '0'), (err) => {
+                                    if (!err) {
+                                        res.status(200).end();
+                                        // remove the description file as it is unused
+                                        fs.unlinkSync(path.join('maps',`${id}.bz.dzi`));
+                                    } else {
+                                        next(err);
+                                    }
+                                });
+                            } else {
+                                next(err);
+                            }
+                        });
+                }
+            });
         } else {
             return next(new Error('Карта должна быть в формате JPEG или PNG'));
         }
