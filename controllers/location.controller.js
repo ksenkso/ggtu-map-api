@@ -313,15 +313,17 @@ const uploadMap = async function (req, res, next) {
                         })
                         .tile({
                             depth: 'onetile',
-                            size: 512
+                            size: 256
                         })
                         .toFile(path.join('maps', `${id}.bz`), (err) => {
                             if (!err) {
+
                                 rimraf(path.join('maps',`${id}.bz_files`, '0'), (err) => {
                                     if (!err) {
                                         res.status(200).end();
                                         // remove the description file as it is unused
                                         fs.unlinkSync(path.join('maps',`${id}.bz.dzi`));
+                                        fs.renameSync(path.join('maps', `${id}.bz_files`), path.join('maps', `${id}`));
                                     } else {
                                         next(err);
                                     }
