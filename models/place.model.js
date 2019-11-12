@@ -1,6 +1,5 @@
 'use strict';
 const debug = require('debug')('App:Model:Place');
-const {updateContainerOnMap} = require('../utils');
 
 module.exports = (sequelize, DataTypes) => {
     /**
@@ -10,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     const Place = sequelize.define('Place', {
         name: DataTypes.STRING,
         type: DataTypes.STRING,
-        container: DataTypes.STRING(8)
+        geometry: DataTypes.GEOMETRY('POLYGON')
     });
 
     Place.associate = function (models) {
@@ -24,25 +23,5 @@ module.exports = (sequelize, DataTypes) => {
             return place;
         };
     };
-
-    Place.addHook('afterSave', async (place, options) => {
-        debug('afterSave');
-        let shouldUpdate = false;
-        for (let i = 0; i < options.fields.length; i++) {
-            if (options.fields[i] === 'id' || options.fields[i] === 'container') {
-                shouldUpdate = true;
-                break;
-            }
-        }
-        if (shouldUpdate) {
-            const location = await place.getLocation();
-            updateContainerOnMap(location, place.container, {id: place.id});
-        }
-    });
-
-    Place.addHook('afterDestroy', async (place) => {
-        const location = await place.getLocation();
-        updateContainerOnMap(location, place.container, {id: null});
-    });
     return Place;
 };

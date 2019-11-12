@@ -24,8 +24,8 @@ module.exports.update = update;
 
 const create = async function(req, res, next) {
     try {
-        const {TransitionId, container, LocationId, coords} = req.body;
-        const created = await TransitionView.create({TransitionId, container, LocationId});
+        const {TransitionId, coordinates, LocationId, coords} = req.body;
+        const created = await TransitionView.create({TransitionId, geometry: {type: 'Polygon', coordinates}, LocationId});
         // Create vertex for the transition view
         const ObjectId = (await MapObject.findOne({where: {TransitionViewId: created.id}})).id;
         const vertex = await PathVertex.create({x: coords.x, y: coords.y, z: coords.z, LocationId, ObjectId});

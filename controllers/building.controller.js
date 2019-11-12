@@ -20,14 +20,23 @@ module.exports.getAllForBuilding = getAllForBuilding;
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {type, name, container} = req.body;
+    const {type, name, coordinates} = req.body;
     const errors = [];
+    if (!coordinates) {
+        errors.push(new Error('Здание не привязано к области карты.'));
+    }
+    if (!name) {
+        errors.push(new Error('Здание должно иметь название'));
+    }
+    if (!type) {
+        errors.push(new Error('Здание должно иметь тип'));
+    }
     if (!errors.length) {
         try {
             /**
              * @type Building
              */
-            const building = await Building.create({type, name, container});
+            const building = await Building.create({type, name, geometry: {type: 'Polygon', coordinates}});
             const output = building.toJSON();
             return ReS(res, output, 201);
         } catch (e) {
@@ -44,7 +53,7 @@ const getAll = async function(req, res, next) {
     const include = [
         {
             model: Location,
-            attributes: ['id', 'name', 'map']
+            attributes: ['id', 'name']
         }
     ];
     const config = Object.assign({}, {include}, req.queryConfig);

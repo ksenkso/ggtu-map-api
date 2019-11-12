@@ -9,13 +9,13 @@ const {Place, PlaceProps, MapObject} = require('../models');
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {LocationId, name, type, container} = req.body;
+    const {LocationId, name, type, geometry} = req.body;
     let {props} = req.body;
     const errors = [];
     if (!LocationId) {
         errors.push(new Error('Место не привязано к локации.'));
     }
-    if (!container) {
+    if (!geometry) {
         errors.push(new Error('Место не привязано к области карты.'));
     }
     if (!name) {
@@ -33,7 +33,7 @@ const create = async function (req, res, next) {
                 LocationId,
                 name,
                 type,
-                container,
+                geometry: {type: 'Polygon', coordinates: geometry},
                 Props: PlaceProps.expandProps(props)
             }, {include: [{association: 'Props'}]});
             debug('created');
@@ -87,7 +87,6 @@ module.exports.update = update;
 const remove = async function (req, res, next) {
     const id = req.place.id;
     try {
-        // await Place.getPropsClass(place.type).destroy({where: {PlaceId: id}});
         await req.place.destroy();
         return ReS(res, {id}, 200);
     } catch (e) {

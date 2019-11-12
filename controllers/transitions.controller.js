@@ -104,9 +104,9 @@ module.exports.getAll = getAll;
 
 const addView = async function(req, res, next) {
     const id = +req.params.id;
-    const {LocationId, container} = req.body;
+    const {LocationId, coordinates} = req.body;
     try {
-        const view = await TransitionView.create({TransitionId: id, LocationId, container});
+        const view = await TransitionView.create({TransitionId: id, LocationId, geometry: {type: 'Polygon', coordinates}});
         return ReS(res, view.toJSON());
     } catch (e) {
         return next(e);

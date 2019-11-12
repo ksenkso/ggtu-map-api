@@ -13,10 +13,10 @@ async function getLocationGraph(LocationId) {
             association: PathVertex.Object,
             include: [{
                 association: MapObject.Place,
-                attributes: ['name', 'type', 'container']
+                attributes: ['name', 'type', 'geometry']
             }, {
                 association: MapObject.TransitionView,
-                attributes: ['container', 'TransitionId']
+                attributes: ['geometry', 'TransitionId']
             }]
         },
         attributes: ['id', 'x', 'y', 'z']

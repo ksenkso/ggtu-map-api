@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
      * @extends Sequelize.Model
      */
     const Location = sequelize.define('Location', {
-        map: DataTypes.STRING(10),
         name: DataTypes.STRING(100),
         floor: DataTypes.INTEGER
     }, {timestamps: false});

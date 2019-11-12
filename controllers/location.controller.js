@@ -8,7 +8,6 @@
  * @typedef {AdjacencyNode[]} AdjacencyList
  *
  */
-
 /**
  * @typedef {{id: string, position: Point3D, ObjectId: number}} SerializedWayPoint
  */
@@ -33,7 +32,6 @@
 const fs = require('fs');
 const path = require('path');
 const debug = require('debug')('App:Locations');
-const uuidv4 = require('uuid/v4');
 const {ReS} = require('../services/util.service');
 const {Location, Place, Building, TransitionView, PathVertex, PathEdge} = require('../models');
 const {getLocationGraph} = require('../utils/paths');
@@ -51,14 +49,17 @@ const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
  * @return {Promise<Model>}
  */
 const create = async function (req, res, next) {
-    const {name, map, BuildingId, floor} = req.body;
+    const {name, BuildingId, floor} = req.body;
     const errors = [];
     if (!name) {
         errors.push(new Error('Укажите название локации.'));
     }
+    if (typeof floor === 'undefined') {
+        errors.push(new Error('Укажите этаж'))
+    }
     if (!errors.length) {
         try {
-            const location = await Location.create({name, map, BuildingId, floor});
+            const location = await Location.create({name, BuildingId, floor});
             const output = location.toJSON();
             return ReS(res, output, 201);
         } catch (e) {
@@ -144,51 +145,6 @@ const remove = async function (req, res, next) {
     }
 };
 module.exports.remove = remove;
-
-const upload = async function (req, res, next) {
-    const errors = [];
-    if (!req.files) {
-        errors.push(new Error('Загрузите файл.'));
-        return next(errors);
-    }
-    const file = req.files.map;
-    if (!file) {
-        errors.push(new Error('Загрузите файл.'));
-    } else if (file.mimetype !== 'image/svg+xml') {
-        errors.push(new Error('Файл карты должен быть в формате SVG, получено: ' + file.mimetype));
-    }
-    if (!errors.length) {
-        const location = req.location;
-        if (location.map) {
-            try {
-                await new Promise((resolve, reject) => {
-                    fs.unlink(path.join(MAPS_PATH, location.map), err => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve();
-                        }
-                    });
-                });
-            } catch (e) {
-                next(e);
-            }
-        }
-        const map = `${uuidv4()}.svg`;
-        const [err] = await Promise.all([
-            file.mv('maps/' + map),
-            req.location.update({map})
-        ]);
-        if (err) {
-            next(err);
-        } else {
-            return ReS(res, location, 200);
-        }
-    } else {
-        return next(errors);
-    }
-};
-module.exports.upload = upload;
 
 const getObjects = async function (req, res, next) {
     const LocationId = req.params.id;

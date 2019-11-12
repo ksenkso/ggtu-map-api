@@ -1,5 +1,4 @@
 'use strict';
-const {updateContainerOnMap} = require('../utils');
 
 const debug = require('debug')('App:Model:Transition');
 module.exports = (sequelize, DataTypes) => {
@@ -32,8 +31,7 @@ module.exports = (sequelize, DataTypes) => {
                 debug('Removing view: ' + view.id);
                 const location = view.Location;
                 debug('View\' location: ' + view.Location.name);
-                debug('View\'s container: ' + view.container);
-                updateContainerOnMap(location, view.container, {});
+                debug('View\'s geometry: ' + view.geometry);
                 debug('View removed');
             });
 

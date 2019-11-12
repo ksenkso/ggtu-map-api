@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
      * @extends Sequelize.Model
      */
     const TransitionView = sequelize.define('TransitionView', {
-        container: DataTypes.STRING(48)
+        geometry: DataTypes.GEOMETRY('POLYGON')
     }, {timestamps: false});
 
 
@@ -17,18 +17,6 @@ module.exports = (sequelize, DataTypes) => {
         TransitionView.hasOne(models.MapObject);
     };
 
-    TransitionView.defineStatic = () => {
-        TransitionView.addHook('afterSave', async (view) => {
-            debug('afterSave');
-            const location = await view.getLocation();
-            updateContainerOnMap(location, view.container, {id: view.id, 'transition-id': view.TransitionId});
-        });
-
-        TransitionView.addHook('afterDestroy', async (view) => {
-            const location = await view.getLocation();
-            updateContainerOnMap(location, view.container, {id: null, 'transition-id': null});
-        });
-    };
 
     return TransitionView;
 };
