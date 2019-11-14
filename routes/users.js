@@ -26,7 +26,7 @@ module.exports = (router) => {
     router.post('/login', UserController.login);
     router.get('/auth', UserController.checkAuth);
     router.post('/register', UserController.create);
-
+    //router.post('/users', querying.enableRelations, querying.enableLimits, UserController.create);
     router.post('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.create);                                                                                           // C
     router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.get);                                            // R
     router.patch('/users', auth, querying.enableRelations, querying.enableLimits, UserController.update);                                            // U

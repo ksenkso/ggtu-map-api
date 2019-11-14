@@ -22,7 +22,7 @@ const create = async function (req, res, next) {
         errors.push(new Error('Please enter password'));
     }
     if (
-        role && (req.user || req.user.role !== 'root') ||
+        role && (req.user && req.user.role !== 'root') ||
         !role
     ) {
         role = 'consumer';
