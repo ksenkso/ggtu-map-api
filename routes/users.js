@@ -26,7 +26,9 @@ module.exports = (router) => {
     router.post('/login', UserController.login);
     router.get('/auth', UserController.checkAuth);
     router.post('/register', UserController.create);
+    // Uncomment next line to allow user creation for unauthorized users
     //router.post('/users', querying.enableRelations, querying.enableLimits, UserController.create);
+    // Uncomment next line to allow user creation only for root users
     router.post('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.create);                                                                                           // C
     router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.get);                                            // R
     router.patch('/users', auth, querying.enableRelations, querying.enableLimits, UserController.update);                                            // U
