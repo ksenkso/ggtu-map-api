@@ -73,6 +73,13 @@ const get = async function (req, res) {
 module.exports.get = get;
 
 const update = async function (req, res, next) {
+    if (req.body.coordinates) {
+        req.body.geometry = {
+            type: 'Polygon',
+            coordinates: req.body.coordinates
+        };
+        delete req.body.coordinates;
+    }
     try {
         await req.building.update(req.body);
         return ReS(res, req.building.toJSON());

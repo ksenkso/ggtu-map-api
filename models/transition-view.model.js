@@ -1,6 +1,4 @@
 'use strict';
-const debug = require('debug')('App:Model:TransitionView');
-const {updateContainerOnMap} = require('../utils');
 module.exports = (sequelize, DataTypes) => {
     /**
      * @class TransitionView

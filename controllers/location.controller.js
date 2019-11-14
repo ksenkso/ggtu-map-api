@@ -37,10 +37,8 @@ const {Location, Place, Building, TransitionView, PathVertex, PathEdge} = requir
 const {getLocationGraph} = require('../utils/paths');
 const rimraf = require('rimraf');
 const sharp = require('sharp');
-
 const {Op} = require('sequelize');
 
-const MAPS_PATH = process.env.MAPS_PATH || path.resolve(__dirname, '../maps/');
 /**
  *
  * @param req

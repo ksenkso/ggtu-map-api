@@ -1,6 +1,4 @@
 'use strict';
-const debug = require('debug')('App:Model:Building');
-const {updateContainerOnMap} = require('../utils');
 
 module.exports = (sequelize, DataTypes) => {
     /**
