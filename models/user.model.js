@@ -3,6 +3,14 @@ const debug = require('debug')('Model:User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const CONFIG = require('../config');
+const hashPassword = async (password) => {
+    if (!password) {
+        throw new Error('Password shouldn\'t be an empty string.');
+    } else {
+        const salt = await bcrypt.genSalt(10);
+        return bcrypt.hash(password, salt);
+    }
+};
 
 
 
@@ -19,20 +27,11 @@ module.exports = (sequelize, DataTypes) => {
 
     User.beforeSave(async (user) => {
         if (user.changed('password')) {
-            let salt, hash;
-            try {
-                salt = await bcrypt.genSalt(10);
-                hash = await bcrypt.hash(user.password, salt);
-                user.password = hash;
-            } catch (err) {
-                if (!user.password) {
-                    throw new Error('Password shouldn\'t be an empty string.');
-                }
-            }
-
-            user.password = hash;
+            user.password = hashPassword(user.password);
         }
     });
+
+
     /**
      *
      * @param {String} pw
@@ -64,3 +63,4 @@ module.exports = (sequelize, DataTypes) => {
 
     return User;
 };
+module.exports.hashPassword = hashPassword;
