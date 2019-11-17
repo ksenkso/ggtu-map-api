@@ -29,10 +29,10 @@ module.exports = (router) => {
     // Uncomment next line to allow user creation for unauthorized users
     //router.post('/users', querying.enableRelations, querying.enableLimits, UserController.create);
     // Uncomment next line to allow user creation only for root users
-    router.post('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.create);                                                                                           // C
-    router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.get);                                            // R
-    router.patch('/users', auth, querying.enableRelations, querying.enableLimits, UserController.update);                                            // U
-    router.delete('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.remove);                                         // D
-    router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.me);                                             // R                                                                                   // C
-    router.get('/users/tokenInfo', auth, querying.enableRelations, querying.enableLimits, UserController.tokenInfo);                                             // R                                                                                   // C
+    router.post('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.create);
+    router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.get);
+    router.patch('/users', auth, querying.enableRelations, querying.enableLimits, UserController.update);
+    router.delete('/users', auth, querying.enableRelations, querying.enableLimits, access.createFilter(), UserController.remove);
+    router.get('/users/me', auth, querying.enableRelations, querying.enableLimits, UserController.me);
+    router.get('/users/tokenInfo', auth, querying.enableRelations, querying.enableLimits, UserController.tokenInfo);
 };
