@@ -10,7 +10,7 @@ CONFIG.db = {
     port: process.env.DB_PORT || '3306',
     name: process.env.DB_NAME || 'name',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || 'root',
 };
 
 CONFIG.jwt = {
