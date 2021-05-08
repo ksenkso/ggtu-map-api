@@ -26,7 +26,7 @@
     "icojs": "^0.12.3",
     "jimp": "^0.8.5",
     "jsonwebtoken": "latest",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "morgan": "^1.9.1",
     "mysql2": "^1.6.5",
     "parse-error": "^0.2.0",
