@@ -1,28 +1,41 @@
-# Rest Api Node and Mysql
+# NOTE
+
+This repo is no longer maintained.
+
+# GGTU Map API
 
 ## Description
-This is an Restful API for Node.js and Mysql. Designed after PHP's beautiful Laravel. This is in the MVC format,
-except because it is an API there are no views, just models and controllers.
 
-tutorial can be found here: https://medium.com/@brianalois/build-a-rest-api-for-node-mysql-2018-jwt-6957bcfc7ac9
+This is a backend for an interactive map of [GGTU](http://ggtu.ru/).
+
+Related repos:
+- [Admin panel repo](https://github.com/ksenkso/ggtu-maps-admin)
+- [Map library (API client and renderer)](https://github.com/ksenkso/ggtu-maps)
+- [Map client](https://github.com/ksenkso/ggtu-map-client)
+- [Map parsing tool](https://github.com/ksenkso/ggtu-map-tool)
+
+## Features
+
+- Serving maps in SVG;
+- Search for objects (like buildings, cabinets, etc.);
+- Pathfinding;
+
 ##### Routing         : Express
 ##### ORM Database    : Sequelize
 ##### Authentication  : Passport, JWT
 
 ## Installation
 
-#### Download Code | Clone the Repo
+Clone and install
 
-```
-git clone {repo_name}
-```
-
-#### Install Node Modules
-```
-npm install
+```bash
+git clone https://github.com/ksenkso/ggtu-map-api.git
+cd ggtu-map-api
+npm i
 ```
 
-#### Create .env File
+Create .env File
+
 You will find a example.env file in the home directory. Paste the contents of that into a file named .env in the same directory. 
 Fill in the variables to fit your application
 
