@@ -48,8 +48,11 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     User.prototype.generateJWT = function () {
-        let expiration_time = parseInt(CONFIG.jwt.expiration);
-        this.token = jwt.sign({user_id: this.id}, CONFIG.jwt.encryption, {expiresIn: expiration_time});
+        this.token = jwt.sign(
+            { user_id: this.id },
+            CONFIG.jwt.encryption,
+            { expiresIn: CONFIG.jwt.expiration }
+        );
     };
 
     User.prototype.getClean = function () {
