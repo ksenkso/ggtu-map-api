@@ -39,7 +39,7 @@ if (CONFIG.app === 'dev') {
 // CORS
 app.use(cors());
 app.use('/v1', v1);
-app.use('/maps', express.static('./maps'));
+app.use('/v1/maps', express.static('./maps'));
 
 app.get(function (req, res) {
     res.statusCode = 200;//send the appropriate status code
@@ -61,12 +61,7 @@ app.use(function (err, req, res, next) {
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     let errors = (err instanceof Array) ? err : [err];
     errors = errors.map(e => {
-        const err = pe(e);
-/*        delete err.line;
-        delete err.row;
-        delete err.filename;
-        delete err.stack;*/
-        return err;
+        return pe(e);
     });
 
     res
