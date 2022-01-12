@@ -13,6 +13,7 @@ Related repos:
 - [Map library (API client and renderer)](https://github.com/ksenkso/ggtu-map)
 - [Map client](https://github.com/ksenkso/ggtu-map-client)
 - [Map parsing tool](https://github.com/ksenkso/ggtu-map-tool)
+- [Map transformation tool](https://github.com/ksenkso/ggtu-map-too)
 
 ## Features
 
