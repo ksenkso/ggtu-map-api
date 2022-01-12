@@ -9,7 +9,7 @@ This repo is no longer maintained.
 This is a backend for an interactive map of [GGTU](http://ggtu.ru/).
 
 Related repos:
-- [Admin panel repo](https://github.com/ksenkso/ggtu-maps-admin)
+- [Admin panel repo](https://github.com/ksenkso/ggtu-map-dashboard)
 - [Map library (API client and renderer)](https://github.com/ksenkso/ggtu-map)
 - [Map client](https://github.com/ksenkso/ggtu-map-client)
 - [Map transformation tool](https://github.com/ksenkso/ggtu-map-tool)
