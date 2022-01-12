@@ -12,8 +12,7 @@ Related repos:
 - [Admin panel repo](https://github.com/ksenkso/ggtu-maps-admin)
 - [Map library (API client and renderer)](https://github.com/ksenkso/ggtu-map)
 - [Map client](https://github.com/ksenkso/ggtu-map-client)
-- [Map parsing tool](https://github.com/ksenkso/ggtu-map-tool)
-- [Map transformation tool](https://github.com/ksenkso/ggtu-map-too)
+- [Map transformation tool](https://github.com/ksenkso/ggtu-map-tool)
 
 ## Features
 
