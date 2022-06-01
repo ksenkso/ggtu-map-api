@@ -39,7 +39,7 @@
     "sequelize": "^5.11.0",
     "sequelize-cli": "^5.5.0",
     "serve-favicon": "~2.4.5",
-    "sharp": "^0.20.8",
+    "sharp": "^0.30.5",
     "validator": "^9.4.1"
   }
 }
